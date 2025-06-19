@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>車廂 QR Code 生成器</title>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            text-align: center;
+        }
+        .controls, .button-group {
+            margin-bottom: 20px;
+        }
+        .controls input {
+            padding: 10px;
+            font-size: 16px;
+            width: 100px;
+            text-align: center;
+        }
+        .button-group button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .button-group button.active {
+            background-color: #28a745;
+        }
+        .group-name {
+            font-size: 24px;
+            margin: 20px 0;
+            color: #28a745;
+            font-weight: bold;
+        }
+        .qrcode-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+        .qrcode-item {
+            text-align: center;
+        }
+        .qrcode-item .text-content {
+            font-family: monospace;
+            margin-bottom: 5px;
+        }
+        .qrcode-item .car-number {
+            font-weight: bold;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>車廂 QR Code 生成器</h1>
+        <div class="controls">
+            <label>輸入數字：</label>
+            <input type="number" id="inputNumber" value="2001">
+        </div>
+        <div class="button-group">
+            <button id="btnA" onclick="showGroup('A')">500型</button>
+            <button id="btnB" onclick="showGroup('B')">700型</button>
+            <button id="btnC" onclick="showGroup('C')">800型</button>
+            <button id="btnD" onclick="showGroup('D')">900型</button>
+            <button id="btnE" onclick="showGroup('E')">3000型</button>
+            <button id="btnF" onclick="showGroup('F')">普悠瑪</button>
+        </div>
+        <div class="group-name" id="currentGroupName"></div>
+        <div id="qrcodeDisplay" class="qrcode-container"></div>
+    </div>
+
+    <script>
+        let currentGroup = '';
+
+        function showGroup(group) {
+            currentGroup = group;
+            document.querySelectorAll('.button-group button').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`btn${group}`).classList.add('active');
+            generateQRCodes();
+        }
+
+        function generateQRCodes() {
+            const inputNum = parseInt(document.getElementById('inputNumber').value);
+            if (isNaN(inputNum)) {
+                alert('請輸入有效數字');
+                return;
+            }
+
+            const display = document.getElementById('qrcodeDisplay');
+            display.innerHTML = '';
+            let data = [];
+            let name = '';
+            let carNumber = 1;
+
+            switch (currentGroup) {
+                case 'A':
+                    name = '500型';
+                    data = [`45EMC${inputNum}`, `45EP${inputNum}`, `45ET${inputNum}`, `45EM${inputNum}`];
+                    break;
+                case 'B':
+                    name = '700型';
+                    const b1 = inputNum, b2 = inputNum + 1;
+                    data = [`45EMC${b1}`, `45EP${b1}`, `40ET${b1}`, `45EM${b1}`, `45EM${b2}`, `40ET${b2}`, `45EP${b2}`, `45EMC${b2}`];
+                    break;
+                case 'C':
+                    name = '800型';
+                    const c1 = inputNum, c2 = inputNum + 1;
+                    data = [`45ED${c1}`, `50EMA${c1}`, `50EP${c1}`, `50EMB${c1}`, `50EMB${c2}`, `50EP${c2}`, `50EMA${c2}`, `45ED${c2}`];
+                    break;
+                case 'D':
+                    name = '900型';
+                    const d0 = inputNum, d1 = d0 + 1, d2 = d0 + 2, d3 = d0 + 3, d4 = d0 + 4;
+                    data = [`50ED${d0}`, `50EM${d0}`, `45EP${d0}`, `50EM${d1}`, `45EM${d2}`, `45EP${d1}`, `50EM${d3}`, `45EP${d2}`, `50EM${d4}`, `50ED${d1}`];
+                    break;
+                case 'E':
+                    name = '3000型';
+                    const e0 = inputNum, e1 = e0 + 1, e2 = e0 + 2, e3 = e0 + 3, e4 = e0 + 4, e5 = e0 + 5;
+                    data = [`45ED${e0}`, `45EM${e0}`, `45EP${e0}`, `45EM${e1}`, `45ET${e0}`, `45EM${e2}`, `50EP${e1}`, `45EM${e3}`, `45EM${e4}`, `45EP${e2}`, `45EM${e5}`, `45ED${e1}`];
+                    break;
+                case 'F':
+                    name = '普悠瑪';
+                    const last2 = inputNum % 100;
+                    const hash = inputNum - last2 + last2 * 2;
+                    const at = hash - (hash % 100) + (hash % 100) - 1;
+                    const sec = inputNum - last2 + last2 + 1;
+                    const yen = sec - (sec % 100) + (sec % 100) * 2;
+                    const cent = yen - (yen % 100) + (yen % 100) - 1;
+                    data = [
+                        `40TED${inputNum}`,
+                        `40TEMA${at}`,
+                        `45TEP${inputNum}`,
+                        `40TEMB${hash}`,
+                        `40TEMB${yen}`,
+                        `45TEP${sec}`,
+                        `40TEMA${cent}`,
+                        `40TED${sec}`
+                    ];
+                    break;
+                default:
+                    name = '';
+            }
+
+            document.getElementById('currentGroupName').textContent = name;
+
+            data.forEach(text => {
+                const item = document.createElement('div');
+                item.className = 'qrcode-item';
+
+                const label = document.createElement('div');
+                label.className = 'text-content';
+                label.textContent = text;
+
+                const qrcodeDiv = document.createElement('div');
+                const carLabel = document.createElement('div');
+                carLabel.className = 'car-number';
+                carLabel.textContent = `第 ${carNumber} 車`;
+                carNumber++;
+
+                item.appendChild(label);
+                item.appendChild(qrcodeDiv);
+                item.appendChild(carLabel);
+                display.appendChild(item);
+
+                new QRCode(qrcodeDiv, {
+                    text: text,
+                    width: 128,
+                    height: 128,
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            });
+        }
+
+        // 初始載入預設為 A 組
+        document.addEventListener('DOMContentLoaded', () => {
+            showGroup('A');
+        });
+    </script>
+</body>
+</html>
