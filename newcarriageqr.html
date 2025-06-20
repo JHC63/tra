@@ -30,7 +30,7 @@
         }
         .controls input {
             padding: 10px;
-            font-size: 16px;
+            font-size: 26px;
             width: 100px;
             text-align: center;
         }
@@ -64,11 +64,14 @@
             text-align: center;
         }
         .qrcode-item .text-content {
-            font-family: monospace;
-            margin-bottom: 5px;
+            font-family:
+monospace;
+            font-size: 20px;
+            margin-bottom: 10px;
         }
         .qrcode-item .car-number {
             font-weight: bold;
+            font-size: 20px;
             margin-top: 8px;
         }
         .qrcode-item canvas {
@@ -86,7 +89,7 @@
     <div class="container">
         <h1>車廂 QR Code 生成器</h1>
         <div class="controls">
-            <label>輸入數字：</label>
+            <label>請輸入車廂第1車號碼再點擊車型：</label>
             <input type="number" id="inputNumber" value="777">
         </div>
         <div class="button-group">
@@ -204,8 +207,8 @@
 
                 new QRCode(qrcodeDiv, {
                     text: text,
-                    width: 256,
-                    height: 256,
+                    width: 192,
+                    height: 192,
                     correctLevel: QRCode.CorrectLevel.H
                 });
             });
