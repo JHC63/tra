@@ -187,6 +187,42 @@
     .undo-button:hover {
         color: #555;
     }
+
+    /* Quick Import Area Styles */
+    .quick-import-area {
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      position: relative;
+      background-color: #f9f9f9;
+      padding-top: 30px; /* Space for the label */
+    }
+    .quick-import-area::before {
+      content: "快速導入";
+      position: absolute;
+      top: -15px; /* Position on the border */
+      left: 50%; /* Center horizontally */
+      transform: translateX(-50%); /* Adjust for half of its own width */
+      background-color: #f9f9f9; /* Match background to hide border behind text */
+      padding: 0 10px;
+      font-weight: bold;
+      font-size: 20px;
+      color: #333;
+    }
+    .quick-import-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      /* Max 4 buttons per line */
+      /* Each button will take approximately 25% of the container width minus the gap */
+    }
+    .quick-import-buttons button {
+      flex: 1 1 calc(25% - 7.5px); /* Ensures max 4 per line with 10px gap */
+      max-width: calc(25% - 7.5px); /* Also limit max width for responsiveness */
+      margin: 0; /* Remove individual button margins, rely on gap */
+    }
   </style>
 </head>
 <body>
@@ -197,6 +233,18 @@
     </div>
 
     <div id="settings-tab" class="tab-content active">
+      <div class="quick-import-area">
+        <div class="quick-import-buttons">
+          <button onclick="importQuickData('110次')">110次</button>
+          <button onclick="importQuickData('111次')">111次</button>
+          <button onclick="importQuickData('116次')">116次</button>
+          <button onclick="importQuickData('131次')">131次</button>
+          <button onclick="importQuickData('132次')">132次</button>
+          <button onclick="importQuickData('143次')">143次</button>
+          <button onclick="importQuickData('154次')">154次</button>
+        </div>
+      </div>
+
       <h1>設置自由座車廂</h1>
       <div class="input-group">
         <label for="num-cars">自由座車廂數：</label>
@@ -251,6 +299,48 @@
     // History for undo functionality
     let history = [];
     let historyPointer = -1;
+
+    /**
+     * Predefined train data for quick import.
+     * Each object contains numCars, startCar, and stations.
+     */
+    const trainDataPresets = {
+        '110次': {
+            numCars: 1,
+            startCar: 9,
+            stations: ["屏東", "高雄", "臺南", "嘉義", "彰化", "台中", "豐原", "板橋","臺北", "松山", "南港", "七堵"]
+        },
+        '111次': {
+            numCars: 1,
+            startCar: 9,
+            stations: ["南港", "松山", "臺北", "板橋", "桃園", "台中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"]
+        },
+        '116次': {
+            numCars: 3,
+            startCar: 9,
+            stations: ["屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "台中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
+        },
+        '131次': {
+            numCars: 1,
+            startCar: 9,
+            stations: ["嘉義", "臺南", "高雄", "屏東", "潮州"]
+        },
+        '132次': {
+            numCars: 1,
+            startCar: 9,
+            stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "台中", "新竹", "板橋","臺北", "松山", "南港", "七堵"]
+        },
+        '143次': {
+            numCars: 1,
+            startCar: 9,
+            stations: ["臺南", "高雄", "鳳山", "屏東", "潮州"]
+        },
+        '154次': {
+            numCars: 1,
+            startCar: 9,
+            stations: ["屏東", "高雄", "臺南", "嘉義", "台中", "桃園", "板橋", "臺北", "松山", "南港"]
+        }
+    };
 
     /**
      * Saves the current state of the seating chart and settings to the history array.
@@ -822,6 +912,42 @@
         openTab(null, 'settings-tab'); // Ensure settings tab is active on fresh load
       }
     }
+
+    /**
+     * Imports predefined train data into the settings fields.
+     * @param {string} trainName - The key for the train data in trainDataPresets.
+     */
+    function importQuickData(trainName) {
+        const preset = trainDataPresets[trainName];
+        if (preset) {
+            document.getElementById('num-cars').value = preset.numCars;
+            document.getElementById('start-car').value = preset.startCar;
+
+            const stationsContainer = document.getElementById('stations-container');
+            stationsContainer.innerHTML = ''; // Clear existing fields
+
+            preset.stations.forEach(station => {
+                addStationField();
+                stationsContainer.lastElementChild.querySelector('.station-input').value = station;
+            });
+            // Ensure default number of empty fields are present if loaded stations are fewer
+            while (stationsContainer.children.length < defaultStationFields) {
+                addStationField();
+            }
+            // Clear seat selections and car perspectives when importing new data
+            // This is important because the new data might not match old selections/perspectives
+            document.querySelectorAll('.station-select').forEach(select => {
+                select.value = '';
+                toggleSeatColor(select.getAttribute('data-seat-id'), '');
+            });
+            for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
+
+            confirmSettings(); // Generate charts and save state after quick import
+        } else {
+            console.error('Unknown train preset:', trainName);
+        }
+    }
+
 
     // Initialize on page load
     window.onload = function() {
