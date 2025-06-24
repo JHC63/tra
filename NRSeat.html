@@ -420,12 +420,24 @@
         <div class="quick-import-area">
           <div class="quick-import-buttons">
             <button onclick="importQuickData('110次')">110次</button>
-            <button onclick="importQuickData('111次')">111次</button>
-            <button onclick="importQuickData('116次')">116次</button>
-            <button onclick="importQuickData('131次')">131次</button>
-            <button onclick="importQuickData('132次')">132次</button>
-            <button onclick="importQuickData('143次')">143次</button>
-            <button onclick="importQuickData('154次')">154次</button>
+<button onclick="importQuickData('111次')">111次</button>
+<button onclick="importQuickData('116次')">116次</button>
+<button onclick="importQuickData('117次')">117次</button>
+<button onclick="importQuickData('119次')">119次</button>
+<button onclick="importQuickData('120次')">120次</button>
+<button onclick="importQuickData('127次')">127次</button>
+<button onclick="importQuickData('131次')">131次</button>
+<button onclick="importQuickData('132次')">132次</button>
+<button onclick="importQuickData('133次')">133次</button>
+<button onclick="importQuickData('143次')">143次</button>
+<button onclick="importQuickData('145次')">145次</button>
+<button onclick="importQuickData('146次')">146次</button>
+<button onclick="importQuickData('148次')">148次</button>
+<button onclick="importQuickData('154次')">154次</button>
+<button onclick="importQuickData('158次')">158次</button>
+<button onclick="importQuickData('160次')">160次</button>
+<button onclick="importQuickData('193次')">193次</button>
+<button onclick="importQuickData('194次')">194次</button>
           </div>
         </div>
         <h1>設置自由座車廂</h1>
@@ -509,40 +521,101 @@
        */
       const trainDataPresets = {
           '110次': {
-              numCars: 1,
-              startCar: 9,
-              stations: ["屏東", "高雄", "臺南", "嘉義", "彰化", "台中", "豐原", "板橋","臺北", "松山", "南港", "七堵"]
-          },
-          '111次': {
-              numCars: 1,
-              startCar: 9,
-              stations: ["南港", "松山", "臺北", "板橋", "桃園", "台中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"]
-          },
-          '116次': {
-              numCars: 3,
-              startCar: 9,
-              stations: ["屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "台中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
-          },
-          '131次': {
-              numCars: 1,
-              startCar: 9,
-              stations: ["嘉義", "臺南", "高雄", "屏東", "潮州"]
-          },
-          '132次': {
-              numCars: 1,
-              startCar: 9,
-              stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "台中", "新竹", "板橋","臺北", "松山", "南港", "七堵"]
-          },
-          '143次': {
-              numCars: 1,
-              startCar: 9,
-              stations: ["臺南", "高雄", "鳳山", "屏東", "潮州"]
-          },
-          '154次': {
-              numCars: 1,
-              startCar: 9,
-              stations: ["屏東", "高雄", "臺南", "嘉義", "台中", "桃園", "板橋", "臺北", "松山", "南港"]
-          }
+        numCars: 1,
+        startCar: 9,
+        stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"]
+    },
+    '111次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["七堵", "南港", "松山", "臺北", "板橋", "桃園", "臺中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"]
+    },
+    '116次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "臺中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
+    },
+    '117次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["基隆", "八堵", "七堵", "汐止", "南港", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "苗栗", "豐原", "臺中", "彰化", "員林", "斗六", "民雄", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"]
+    },
+    '119次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化"]
+    },
+    '120次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
+    },
+    '127次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"]
+    },
+    '131次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["七堵", "南港", "松山", "臺北", "板橋", "新竹", "臺中", "彰化", "嘉義", "臺南", "高雄", "屏東", "潮州"]
+    },
+    '132次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["枋寮", "潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "新竹", "板橋", "臺北", "松山", "南港", "七堵"]
+    },
+    '133次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "大肚", "彰化", "員林", "斗六", "嘉義", "新營", "善化", "臺南", "新左營", "高雄", "鳳山", "屏東", "潮州"]
+    },
+    '143次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["七堵", "汐止", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化", "嘉義", "臺南", "高雄", "鳳山", "屏東", "潮州"]
+    },
+    '145次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"]
+    },
+    '146次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
+    },
+    '148次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"]
+    },
+    '154次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "臺中", "桃園", "板橋", "臺北", "松山", "南港"]
+    },
+    '158次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
+    },
+    '160次': {
+        numCars: 3,
+        startCar: 9,
+        stations: ["田中", "社頭", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
+    },
+    '193次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"]
+    },
+    '194次': {
+        numCars: 1,
+        startCar: 9,
+        stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"]
+    }
+
       };
 
       /**
