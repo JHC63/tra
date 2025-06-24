@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>設置自由座車廂</title>
     <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
       /* CSS 變數定義 */
       :root {
@@ -452,8 +451,7 @@
         <div style="margin-bottom: 20px;">
             <button class="undo-button" onclick="undoLastAction()" title="上一步">&#x21BA;</button>
             <button onclick="exportSeatingCharts()">匯出座位表</button>
-            <button onclick="showHandoverQRCode()">交班Qrcode</button>
-<p style="color: red; margin-top: 10px;">Qrcode只有1節自由座車廂可以使用（網址較短），3節自由座請使用匯出座位表按鈕分享網址。</p>
+            <button onclick="showHandoverQRCode()">交班</button>
         </div>
         <div class="quick-import-area station-filter-area" style="margin-bottom: 20px;">
             <div class="quick-import-buttons" id="global-station-buttons"></div>
@@ -555,11 +553,9 @@
           const startCar = document.getElementById('start-car').value;
           const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
 
-          // Get current seat selections from the station-label spans
           const seatSelections = {};
           document.querySelectorAll('.station-label').forEach(label => {
               if (label.textContent) {
-                  // The ID is "label-carNumber-seatNumber", so we substring(6) to get the base ID
                   seatSelections[label.id.substring(6)] = label.textContent;
               }
           });
@@ -581,7 +577,7 @@
       }
 
       /**
-       * Loads a specific state from the history array and applies it to the UI.
+       * Loads a specific state from the history array.
        */
       function loadState(state) {
           if (!state) return;
@@ -591,7 +587,7 @@
 
           const stationsContainer = document.getElementById('stations-container');
           stationsContainer.innerHTML = '';
-          state.stations.forEach(station => {
+          (state.stations || []).forEach(station => {
               addStationField();
               stationsContainer.lastElementChild.querySelector('.station-input').value = station;
           });
@@ -607,7 +603,6 @@
           confirmSettings(false);
 
           setTimeout(() => {
-              // Apply seat selections to the labels
               if (state.seatSelections) {
                   document.querySelectorAll('.station-label').forEach(label => {
                       const seatIdBase = label.id.substring(6);
@@ -774,7 +769,6 @@
           row.forEach((seatNum, index) => {
             const seatIdBase = `${carNumber}-${seatNum}`;
             html += `<td class="seat seat-number-cell" id="seat-${seatIdBase}">${seatNum}</td>`;
-            // This cell is now a clickable button that opens the modal
             html += `<td class="station-select-cell" onclick="openStationModal('${seatIdBase}')">
                        <span class="station-label" id="label-${seatIdBase}"></span>
                      </td>`;
@@ -827,8 +821,7 @@
       }
 
       /**
-       * Updates the global station filter. This function now also clears selections
-       * for stations that are being filtered out.
+       * Updates the global station filter.
        */
       function updateStations(selectedStation, stations) {
         lastActiveStationFilter = selectedStation;
@@ -844,7 +837,6 @@
             button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
         });
 
-        // Clear selections for stations that are no longer valid
         document.querySelectorAll('.station-label').forEach(label => {
             const currentSelection = label.textContent;
             if (currentSelection && stations.indexOf(currentSelection) <= selectedIndex) {
@@ -883,7 +875,7 @@
       }
 
       /**
-       * Generates the export URL with the current state.
+       * Generates the export URL with the current state, using shortened keys for smaller size.
        * @returns {string} The generated URL.
        */
       function generateExportUrl() {
@@ -898,16 +890,16 @@
           }
         });
 
-        const exportData = {
-          numCars: numCars,
-          startCar: startCar,
-          stations: stations,
-          seatSelections: seatSelections,
-          carPerspectives: carPerspectiveState,
-          lastFilter: lastActiveStationFilter
+        const shortKeyExportData = {
+          n: numCars,
+          c: startCar,
+          t: stations,
+          s: seatSelections,
+          p: carPerspectiveState,
+          f: lastActiveStationFilter
         };
         
-        const hash = LZString.compressToEncodedURIComponent(JSON.stringify(exportData));
+        const hash = LZString.compressToEncodedURIComponent(JSON.stringify(shortKeyExportData));
         const currentUrl = window.location.href.split('#')[0];
         return `${currentUrl}#${hash}`;
       }
@@ -951,12 +943,21 @@
             }
             const hashData = JSON.parse(decompressedString);
             
-            document.getElementById('num-cars').value = hashData.numCars || defaultNumCars;
-            document.getElementById('start-car').value = hashData.startCar || defaultStartCar;
+            const fullData = {
+                numCars: hashData.n,
+                startCar: hashData.c,
+                stations: hashData.t,
+                seatSelections: hashData.s,
+                carPerspectives: hashData.p,
+                lastFilter: hashData.f
+            };
+            
+            document.getElementById('num-cars').value = fullData.numCars || defaultNumCars;
+            document.getElementById('start-car').value = fullData.startCar || defaultStartCar;
 
             const stationsContainer = document.getElementById('stations-container');
             stationsContainer.innerHTML = '';
-            hashData.stations.forEach(station => {
+            (fullData.stations || []).forEach(station => {
               addStationField();
               stationsContainer.lastElementChild.querySelector('.station-input').value = station;
             });
@@ -965,28 +966,28 @@
             }
 
             for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
-            if (hashData.carPerspectives) {
-                Object.assign(carPerspectiveState, hashData.carPerspectives);
+            if (fullData.carPerspectives) {
+                Object.assign(carPerspectiveState, fullData.carPerspectives);
             }
 
             confirmSettings(false);
 
             setTimeout(() => {
-                if (hashData.seatSelections) {
-                    for (const seatIdBase in hashData.seatSelections) {
+                if (fullData.seatSelections) {
+                    for (const seatIdBase in fullData.seatSelections) {
                         const labelId = `label-${seatIdBase}`;
                         const seatNumId = `seat-${seatIdBase}`;
                         const labelElement = document.getElementById(labelId);
                         if (labelElement) {
-                            const station = hashData.seatSelections[seatIdBase];
+                            const station = fullData.seatSelections[seatIdBase];
                             labelElement.textContent = station;
                             toggleSeatColor(seatNumId, station);
                         }
                     }
                 }
 
-                if (hashData.lastFilter && currentStations.includes(hashData.lastFilter)) {
-                    updateStations(hashData.lastFilter, currentStations);
+                if (fullData.lastFilter && currentStations.includes(fullData.lastFilter)) {
+                    updateStations(fullData.lastFilter, currentStations);
                 } else {
                     const buttons = document.querySelectorAll('#global-station-buttons button');
                     buttons.forEach(button => {
@@ -1043,12 +1044,11 @@
       const stationModal = document.getElementById('station-modal');
       const qrCodeModal = document.getElementById('qrcode-modal');
       const qrCodeDisplay = document.getElementById('qrcode-display');
-      let qrCodeInstance = null;
 
       function openStationModal(seatIdBase) {
-        stationModal.dataset.seatId = seatIdBase; // Store which seat is being edited
+        stationModal.dataset.seatId = seatIdBase; 
         const buttonContainer = document.getElementById('modal-station-buttons');
-        buttonContainer.innerHTML = ''; // Clear old buttons
+        buttonContainer.innerHTML = ''; 
 
         const filterIndex = lastActiveStationFilter ? currentStations.indexOf(lastActiveStationFilter) : -1;
         const availableStations = currentStations.filter((_, index) => index > filterIndex);
@@ -1084,28 +1084,27 @@
       }
 
       function showHandoverQRCode() {
-        const url = generateExportUrl();
-        
-        qrCodeDisplay.innerHTML = ''; // Clear previous QR code if any
-        
-        new QRCode(qrCodeDisplay, {
-            text: url,
-            width: 256,
-            height: 256,
-            colorDark : "#000000",
-            colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.H
-        });
+        const dataToEncode = generateExportUrl();
+        const encodedData = encodeURIComponent(dataToEncode);
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&ecc=H&format=svg&data=${encodedData}`;
 
+        qrCodeDisplay.innerHTML = ''; 
+
+        const qrImage = document.createElement('img');
+        qrImage.src = qrApiUrl;
+        qrImage.alt = '交班 QR Code';
+        qrImage.width = 256;
+        qrImage.height = 256;
+
+        qrCodeDisplay.appendChild(qrImage);
         qrCodeModal.style.display = 'block';
       }
 
       function closeQRCodeModal() {
           qrCodeModal.style.display = 'none';
-          qrCodeDisplay.innerHTML = ''; // Clean up the QR code to free memory
+          qrCodeDisplay.innerHTML = ''; 
       }
       
-      // Close modal if user clicks outside of the content area
       window.onclick = function(event) {
         if (event.target == stationModal) {
           closeStationModal();
@@ -1115,7 +1114,6 @@
         }
       }
 
-      // Initialize on page load
       window.onload = function() {
         loadSettingsFromHash();
       };
