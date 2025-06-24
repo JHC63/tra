@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>設置自由座車廂</title>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
       /* CSS 變數定義 */
       :root {
@@ -168,7 +170,23 @@
           width: 100px; /* Wider width to accommodate station name */
           min-width: 80px; /* Ensure minimum width */
           max-width: 150px; /* Optional: set a max-width if names are very long */
-          padding: 0; /* Remove default padding */
+          padding: 0; /* Remove padding for flexbox centering */
+          cursor: pointer;
+          transition: background-color 0.2s;
+          /* Use flexbox for perfect centering */
+          display: flex;
+          align-items: center;
+          justify-content: center;
+      }
+      td.station-select-cell:hover {
+        background-color: #f0f0f0;
+      }
+      .station-label {
+        font-size: calc(var(--font-size-base) + 4px); /* Enlarge font */
+        font-weight: bold;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .header, .footer {
         font-weight: bold;
@@ -179,17 +197,6 @@
       }
       .aisle {
         background-color: #ddd;
-      }
-      select {
-        width: 100%;
-        height: 100%;
-        border: none;
-        background-color: white;
-        font-size: var(--font-size-base); /* Using base font size for dropdown text */
-        text-align: left; /* Align text to the left */
-        padding-left: 5px; /* Add some padding to the left */
-        box-sizing: border-box; /* Include padding in the element's total width */
-        white-space: nowrap; /* Prevent station names from wrapping */
       }
 
       /* Message box for copy success */
@@ -202,7 +209,7 @@
         color: white;
         padding: 15px 30px;
         border-radius: 8px;
-        z-index: 1000;
+        z-index: 2000; /* Ensure it's on top */
         opacity: 0;
         transition: opacity 0.5s ease-in-out;
         pointer-events: none;
@@ -269,6 +276,52 @@
       h2 {
           font-size: var(--font-size-large); /* 統一「手動輸入停靠站」文字大小為 25px */
       }
+
+      /* Modal (Floating Window) Styles */
+      .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 1001; 
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.4); 
+      }
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto; 
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 8px;
+        position: relative;
+      }
+      .close-button {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+      .close-button:hover,
+      .close-button:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      #modal-station-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-top: 20px;
+      }
+      #modal-station-buttons button {
+        flex: 1 1 150px;
+      }
+
 
       /* 手機響應式調整 */
       @media (max-width: 768px) {
@@ -341,14 +394,18 @@
               min-width: 60px;
               max-width: 100px;
           }
-          select {
-              font-size: var(--font-size-base);
+          .station-label {
+              font-size: calc(var(--font-size-base) + 2px); /* Adjust font size for mobile */
           }
           .header, .footer {
               font-size: var(--font-size-large);
           }
           h1, h2 {
               font-size: var(--font-size-large);
+          }
+          .modal-content {
+              width: 90%;
+              margin: 25% auto;
           }
       }
     </style>
@@ -392,9 +449,12 @@
 
       <div id="charts-tab" class="tab-content">
         <h1>自由座座位表</h1>
-        <button class="undo-button" onclick="undoLastAction()" title="上一步">&#x21BA;</button>
-        <button onclick="exportSeatingCharts()" style="margin-bottom: 20px;">匯出座位表</button>
-        <!-- Station Filter Area added here -->
+        <div style="margin-bottom: 20px;">
+            <button class="undo-button" onclick="undoLastAction()" title="上一步">&#x21BA;</button>
+            <button onclick="exportSeatingCharts()">匯出座位表</button>
+            <button onclick="showHandoverQRCode()">交班Qrcode</button>
+<p style="color: red; margin-top: 10px;">Qrcode只有1節自由座車廂可以使用（網址較短），3節自由座請使用匯出座位表按鈕分享網址。</p>
+        </div>
         <div class="quick-import-area station-filter-area" style="margin-bottom: 20px;">
             <div class="quick-import-buttons" id="global-station-buttons"></div>
         </div>
@@ -406,6 +466,23 @@
 
     <div id="message-box" class="message-box"></div>
 
+    <div id="station-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeStationModal()">&times;</span>
+        <h2>選擇下車站</h2>
+        <div id="modal-station-buttons"></div>
+      </div>
+    </div>
+    
+    <div id="qrcode-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeQRCodeModal()">&times;</span>
+        <h2>交班 QR Code</h2>
+        <div id="qrcode-display" style="display: flex; justify-content: center; padding: 20px;"></div>
+        <p style="text-align: center;">請使用另一裝置掃描此 QR Code 以載入目前的座位表狀態。</p>
+      </div>
+    </div>
+
     <script>
       // Define the seat layout for a single row.
       const seatLayout = [
@@ -416,7 +493,6 @@
       ];
 
       // Store the state for each car's perspective
-      // Key: carNumber, Value: boolean (true if flipped, false if not)
       const carPerspectiveState = {};
       let currentStations = []; // To store stations for consistent use across functions
       let lastActiveStationFilter = null; // Stores the last clicked station for filtering
@@ -432,7 +508,6 @@
 
       /**
        * Predefined train data for quick import.
-       * Each object contains numCars, startCar, and stations.
        */
       const trainDataPresets = {
           '110次': {
@@ -474,117 +549,99 @@
 
       /**
        * Saves the current state of the seating chart and settings to the history array.
-       * Manages clearing future history if an undo operation was performed.
        */
       function saveState() {
-          // Get current settings
           const numCars = document.getElementById('num-cars').value;
           const startCar = document.getElementById('start-car').value;
           const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
 
-          // Get current seat selections
+          // Get current seat selections from the station-label spans
           const seatSelections = {};
-          document.querySelectorAll('.station-select').forEach(select => {
-              if (select.value) {
-                  // Store only the part of ID after "select-" to make it generic (e.g., "9-1")
-                  seatSelections[select.id.substring(7)] = select.value;
+          document.querySelectorAll('.station-label').forEach(label => {
+              if (label.textContent) {
+                  // The ID is "label-carNumber-seatNumber", so we substring(6) to get the base ID
+                  seatSelections[label.id.substring(6)] = label.textContent;
               }
           });
 
-          // Construct the state object
           const state = {
               numCars: numCars,
               startCar: startCar,
               stations: stations,
               seatSelections: seatSelections,
-              carPerspectives: { ...carPerspectiveState }, // Deep copy car perspective state
+              carPerspectives: { ...carPerspectiveState },
               lastFilter: lastActiveStationFilter
           };
 
-          // If we are not at the end of history (i.e., undo was used), clear "future" history
           if (historyPointer < history.length - 1) {
               history = history.slice(0, historyPointer + 1);
           }
-          history.push(state); // Add the new state to history
-          historyPointer = history.length - 1; // Update pointer to the new end of history
+          history.push(state);
+          historyPointer = history.length - 1;
       }
 
       /**
        * Loads a specific state from the history array and applies it to the UI.
-       * @param {object} state - The state object to load.
        */
       function loadState(state) {
           if (!state) return;
 
-          // Apply settings values
           document.getElementById('num-cars').value = state.numCars || defaultNumCars;
           document.getElementById('start-car').value = state.startCar || defaultStartCar;
 
-          // Apply station inputs
           const stationsContainer = document.getElementById('stations-container');
-          stationsContainer.innerHTML = ''; // Clear existing fields
+          stationsContainer.innerHTML = '';
           state.stations.forEach(station => {
-              addStationField(); // Add a new field
-              stationsContainer.lastElementChild.querySelector('.station-input').value = station; // Set its value
+              addStationField();
+              stationsContainer.lastElementChild.querySelector('.station-input').value = station;
           });
-          // Ensure default number of empty fields are present if loaded stations are fewer
           while (stationsContainer.children.length < defaultStationFields) {
               addStationField();
           }
 
-          // Restore individual car perspectives
-          for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; } // Clear previous states
+          for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
           if (state.carPerspectives) {
-              Object.assign(carPerspectiveState, state.carPerspectives); // Deep copy loaded perspectives
+              Object.assign(carPerspectiveState, state.carPerspectives);
           }
 
-          // Trigger settings confirmation to regenerate charts based on loaded data.
-          // Pass false to confirmSettings to prevent it from saving this state to history again.
           confirmSettings(false);
 
-          // A small delay to ensure DOM elements (charts, selects) are fully rendered before applying selections.
           setTimeout(() => {
-              // Apply seat selections
+              // Apply seat selections to the labels
               if (state.seatSelections) {
-                  document.querySelectorAll('.station-select').forEach(select => {
-                      const seatIdBase = select.id.substring(7); // Extract "carNumber-seatNumber"
-                      const seatNumId = `seat-${seatIdBase}`; // Reconstruct full seat number ID
-
-                      if (state.seatSelections[seatIdBase]) {
-                          select.value = state.seatSelections[seatIdBase]; // Set selected station
-                          toggleSeatColor(seatNumId, state.seatSelections[seatIdBase]); // Update seat color
-                      } else {
-                          select.value = ''; // Clear selection
-                          toggleSeatColor(seatNumId, ''); // Remove color
-                      }
+                  document.querySelectorAll('.station-label').forEach(label => {
+                      const seatIdBase = label.id.substring(6);
+                      const seatNumId = `seat-${seatIdBase}`;
+                      const selectedStation = state.seatSelections[seatIdBase] || '';
+                      
+                      label.textContent = selectedStation;
+                      toggleSeatColor(seatNumId, selectedStation);
                   });
               }
 
-              // Apply the last global station filter
               if (state.lastFilter && currentStations.includes(state.lastFilter)) {
                   updateStations(state.lastFilter, currentStations);
-              } else { // If no filter or invalid, show all filter buttons
+              } else {
                   const buttons = document.querySelectorAll('#global-station-buttons button');
                   buttons.forEach(button => {
                       button.style.display = 'inline-block';
                       button.classList.remove('active-filter');
                   });
               }
-          }, 50); // Small delay
+          }, 50);
       }
-
+      
       /**
        * Reverts the seating chart state to the previous step in history.
        */
       function undoLastAction() {
           if (historyPointer > 0) {
-              historyPointer--; // Move pointer back
-              loadState(history[historyPointer]); // Load the previous state
+              historyPointer--;
+              loadState(history[historyPointer]);
           } else {
-              showMessage('沒有上一步的動作了'); // Inform user if no more history
+              showMessage('沒有上一步的動作了');
           }
       }
-
 
       // --- Tab Switching Logic ---
       function openTab(evt, tabId) {
@@ -592,16 +649,14 @@
         for (let i = 0; i < tabContents.length; i++) {
           tabContents[i].style.display = "none";
         }
-
         const tabButtons = document.getElementsByClassName("tab-button");
         for (let i = 0; i < tabButtons.length; i++) {
           tabButtons[i].className = tabButtons[i].className.replace(" active", "");
         }
-
         document.getElementById(tabId).style.display = "block";
-        if (evt) { // Only add active class if it's a direct user click
+        if (evt) {
           evt.currentTarget.className += " active";
-        } else { // If called programmatically (e.g., from confirmSettings)
+        } else {
             const targetButton = document.querySelector(`.tab-button[onclick*="'${tabId}'"]`);
             if (targetButton) {
                 targetButton.classList.add('active');
@@ -621,38 +676,34 @@
 
       /**
        * Resets all input fields in the settings tab to their default values.
-       * Clears generated charts and associated states.
        */
       function resetSettingsToDefault() {
         document.getElementById('num-cars').value = defaultNumCars;
         document.getElementById('start-car').value = defaultStartCar;
         const container = document.getElementById('stations-container');
-        container.innerHTML = ''; // Clear existing fields
-        // Add default number of empty station input fields
+        container.innerHTML = '';
         for (let i = 0; i < defaultStationFields; i++) {
           addStationField();
         }
-        document.getElementById('seating-charts').innerHTML = ''; // Clear generated charts
-        document.getElementById('global-station-buttons').innerHTML = ''; // Clear global station filter buttons
-        lastActiveStationFilter = null; // Reset last active filter
-        // Clear all stored car perspective states
+        document.getElementById('seating-charts').innerHTML = '';
+        document.getElementById('global-station-buttons').innerHTML = '';
+        lastActiveStationFilter = null;
         for (const carNum in carPerspectiveState) {
             delete carPerspectiveState[carNum];
         }
-        history = []; // Clear undo/redo history
-        historyPointer = -1; // Reset history pointer
+        history = [];
+        historyPointer = -1;
       }
 
       /**
        * Confirms settings, generates seating charts, and optionally saves the state.
-       * @param {boolean} [saveToHistory=true] - Whether to save the current state to history.
        */
       function confirmSettings(saveToHistory = true) {
         const numCars = parseInt(document.getElementById('num-cars').value) || defaultNumCars;
         const startCar = parseInt(document.getElementById('start-car').value) || defaultStartCar;
         currentStations = Array.from(document.querySelectorAll('.station-input'))
           .map(input => input.value.trim())
-          .filter(val => val !== ''); // Get non-empty station names
+          .filter(val => val !== '');
 
         if (currentStations.length === 0) {
           alert('請至少輸入一個停靠站！');
@@ -660,58 +711,46 @@
         }
 
         const output = document.getElementById('seating-charts');
-        output.innerHTML = ''; // Clear existing charts
+        output.innerHTML = '';
 
-        // Generate GLOBAL station filter buttons at the top of charts-tab
         const globalStationButtonsContainer = document.getElementById('global-station-buttons');
-        globalStationButtonsContainer.innerHTML = ''; // Clear previous buttons
+        globalStationButtonsContainer.innerHTML = '';
         currentStations.forEach(station => {
           const button = document.createElement('button');
           button.textContent = station;
           button.onclick = () => {
               updateStations(station, currentStations);
-              saveState(); // Save state after applying filter
+              saveState();
           };
           globalStationButtonsContainer.appendChild(button);
         });
-        lastActiveStationFilter = null; // Reset filter state when new charts are generated
+        lastActiveStationFilter = null;
 
-        // Generate seating charts for each car
         for (let car = startCar; car < startCar + numCars; car++) {
-          // Initialize perspective state for new cars if not already set
           if (carPerspectiveState[car] === undefined) {
-              carPerspectiveState[car] = false; // Default to not flipped (Taipei direction)
+              carPerspectiveState[car] = false;
           }
           output.appendChild(generateSeatingChart(car, currentStations, carPerspectiveState[car]));
         }
 
-        // Save the state if required (e.g., not when loading from history)
         if (saveToHistory) {
             saveState();
         }
-
-        // Automatically switch to the "座位表" tab
         openTab(null, 'charts-tab');
       }
 
       /**
        * Generates the HTML structure for a single car's seating chart.
-       * @param {number} carNumber - The number of the car.
-       * @param {string[]} stations - Array of station names.
-       * @param {boolean} isFlipped - True if the perspective for this car is flipped.
-       * @returns {HTMLElement} The div element containing the car chart.
        */
       function generateSeatingChart(carNumber, stations, isFlipped) {
         const carContainer = document.createElement('div');
         carContainer.className = 'car-chart-container';
-        carContainer.id = `car-chart-${carNumber}`; // Give each car chart a unique ID
+        carContainer.id = `car-chart-${carNumber}`;
 
         const table = document.createElement('table');
-        // Deep copy seatLayout to avoid modifying the original array during reverse operations
         let displaySeatLayout = JSON.parse(JSON.stringify(seatLayout));
 
         if (isFlipped) {
-            // Reverse the order of rows, and reverse the seats within each row
             displaySeatLayout.forEach(row => row.reverse());
             displaySeatLayout.reverse();
         }
@@ -733,24 +772,20 @@
         displaySeatLayout.forEach(row => {
           html += '<tr>';
           row.forEach((seatNum, index) => {
-            // Seat Number Cell
-            html += `<td class="seat seat-number-cell" id="seat-${carNumber}-${seatNum}">${seatNum}</td>`;
-            // Station Select Cell
-            html += `<td class="station-select-cell"><select id="select-${carNumber}-${seatNum}" class="station-select" data-seat-id="seat-${carNumber}-${seatNum}" onchange="toggleSeatColor('seat-${carNumber}-${seatNum}', this.value); saveState();">`;
-            html += '<option value=""></option>';
-            stations.forEach(station => {
-              html += `<option value="${station}">${station}</option>`;
-            });
-            html += '</select></td>'; // Close the select and its new cell
+            const seatIdBase = `${carNumber}-${seatNum}`;
+            html += `<td class="seat seat-number-cell" id="seat-${seatIdBase}">${seatNum}</td>`;
+            // This cell is now a clickable button that opens the modal
+            html += `<td class="station-select-cell" onclick="openStationModal('${seatIdBase}')">
+                       <span class="station-label" id="label-${seatIdBase}"></span>
+                     </td>`;
 
-            if (index === 1) { // After the second seat in a pair (A,B), add an aisle
+            if (index === 1) {
               html += '<td class="aisle"></td>';
             }
           });
           html += '</tr>';
         });
 
-        // Footer
         html += `
           <tr>
             <th colspan="2" class="label">窗戶</th>
@@ -765,13 +800,12 @@
         table.innerHTML = html;
         carContainer.appendChild(table);
 
-        // Add a perspective toggle button for this specific car
         const toggleButton = document.createElement('button');
         toggleButton.id = `toggle-perspective-${carNumber}`;
-        toggleButton.textContent = isFlipped ? '視角切換' : '視角切換';
+        toggleButton.textContent = '視角切換';
         toggleButton.onclick = () => {
             toggleIndividualPerspective(carNumber, stations);
-            saveState(); // Save state after toggling perspective
+            saveState();
         };
         carContainer.appendChild(toggleButton);
 
@@ -780,8 +814,6 @@
 
       /**
        * Toggles the background color of a seat based on whether a station is selected.
-       * @param {string} seatId - The ID of the seat element.
-       * @param {string} value - The selected station value (empty string if no station).
        */
       function toggleSeatColor(seatId, value) {
         const seat = document.getElementById(seatId);
@@ -795,133 +827,74 @@
       }
 
       /**
-       * Updates the station options in all seat select elements based on a global filter.
-       * @param {string} selectedStation - The station chosen as the filter.
-       * @param {string[]} stations - The full list of available stations.
+       * Updates the global station filter. This function now also clears selections
+       * for stations that are being filtered out.
        */
       function updateStations(selectedStation, stations) {
-        lastActiveStationFilter = selectedStation; // Store the last active filter
-
+        lastActiveStationFilter = selectedStation;
         const selectedIndex = stations.indexOf(selectedStation);
 
-        // Highlight the active filter button and hide/show others
         const buttons = document.querySelectorAll('#global-station-buttons button');
         buttons.forEach(button => {
-            button.classList.remove('active-filter'); // Clear previous active
+            button.classList.remove('active-filter');
             if (button.textContent === selectedStation) {
-                button.classList.add('active-filter'); // Set current active
+                button.classList.add('active-filter');
             }
-            // Hide buttons that represent stations before the selected index
             const buttonIndex = stations.indexOf(button.textContent);
             button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
         });
 
-        const selects = document.querySelectorAll('.station-select');
-        selects.forEach(select => {
-          const seatId = select.getAttribute('data-seat-id');
-          const currentValue = select.value;
-
-          // If the current selected value is before or at the new selected station, clear it
-          if (currentValue && stations.indexOf(currentValue) <= selectedIndex) {
-            select.value = '';
-          }
-
-          // Rebuild options for the select element
-          select.innerHTML = '<option value=""></option>'; // Clear existing options
-          stations.forEach((station, index) => {
-            if (index > selectedIndex) { // Only show stations after the selected filter station
-              const option = document.createElement('option');
-              option.value = station;
-              option.text = station;
-              select.appendChild(option);
+        // Clear selections for stations that are no longer valid
+        document.querySelectorAll('.station-label').forEach(label => {
+            const currentSelection = label.textContent;
+            if (currentSelection && stations.indexOf(currentSelection) <= selectedIndex) {
+                const seatIdBase = label.id.substring(6);
+                label.textContent = '';
+                toggleSeatColor(`seat-${seatIdBase}`, '');
             }
-          });
-
-          // Try to restore the previous selection if it's still valid after filtering
-          if (currentValue && stations.indexOf(currentValue) > selectedIndex) {
-            select.value = currentValue;
-          }
-          toggleSeatColor(seatId, select.value); // Update seat color based on new selection
         });
       }
-
+      
       /**
-       * Toggles the perspective (flipped/unflipped) for a specific car.
-       * Re-renders the car chart to reflect the change.
-       * @param {number} carNumber - The number of the car to toggle.
-       * @param {string[]} stations - Array of station names (needed for regenerating chart).
+       * Toggles the perspective for a specific car.
        */
       function toggleIndividualPerspective(carNumber, stations) {
-          carPerspectiveState[carNumber] = !carPerspectiveState[carNumber]; // Flip the state for this car
+          carPerspectiveState[carNumber] = !carPerspectiveState[carNumber];
 
           const oldCarChartContainer = document.getElementById(`car-chart-${carNumber}`);
           if (oldCarChartContainer) {
-              // 1. Store current selections for this car before re-rendering
               const currentCarSelections = {};
-              oldCarChartContainer.querySelectorAll('.station-select').forEach(select => {
-                  const seatIdBase = select.id.substring(7); // "carNumber-seatNumber"
-                  currentCarSelections[seatIdBase] = select.value;
+              oldCarChartContainer.querySelectorAll('.station-label').forEach(label => {
+                  currentCarSelections[label.id.substring(6)] = label.textContent;
               });
 
-              // 2. Generate new chart with updated perspective
               const newCarChartContainer = generateSeatingChart(carNumber, stations, carPerspectiveState[carNumber]);
               oldCarChartContainer.parentNode.replaceChild(newCarChartContainer, oldCarChartContainer);
 
-              // 3. Apply stored selections to the newly generated chart
               for (const seatIdBase in currentCarSelections) {
-                  const selectElement = document.getElementById(`select-${seatIdBase}`);
-                  if (selectElement) {
-                      selectElement.value = currentCarSelections[seatIdBase];
-                      toggleSeatColor(`seat-${seatIdBase}`, currentCarSelections[seatIdBase]);
-                  }
-              }
-              // 4. Re-apply global station filter logic to this specific car's selects
-              // This ensures filter is applied correctly after re-rendering.
-              if (lastActiveStationFilter) {
-                  const selectedIndex = stations.indexOf(lastActiveStationFilter);
-                  if (selectedIndex !== -1) { // Ensure the last filter is still valid
-                      const newCarSelects = newCarChartContainer.querySelectorAll('.station-select');
-                      newCarSelects.forEach(select => {
-                          const seatId = select.getAttribute('data-seat-id');
-                          const currentValue = select.value; // This is the value restored from currentCarSelections
-
-                          select.innerHTML = '<option value=""></option>'; // Clear existing options
-                          stations.forEach((station, index) => {
-                              if (index >= selectedIndex) {
-                                  const option = document.createElement('option');
-                                  option.value = station;
-                                  option.text = station;
-                                  select.appendChild(option);
-                              }
-                          });
-                          // Restore the value if it's still valid after re-populating options
-                          if (currentValue && stations.indexOf(currentValue) >= selectedIndex) {
-                              select.value = currentValue;
-                          } else {
-                              select.value = ''; // Clear if not valid anymore
-                          }
-                          toggleSeatColor(seatId, select.value);
-                      });
+                  const labelElement = document.getElementById(`label-${seatIdBase}`);
+                  if (labelElement) {
+                      const station = currentCarSelections[seatIdBase];
+                      labelElement.textContent = station;
+                      toggleSeatColor(`seat-${seatIdBase}`, station);
                   }
               }
           }
       }
 
       /**
-       * Exports the current seating chart configuration to a URL hash,
-       * then copies the URL to the clipboard.
+       * Generates the export URL with the current state.
+       * @returns {string} The generated URL.
        */
-      function exportSeatingCharts() {
+      function generateExportUrl() {
         const numCars = document.getElementById('num-cars').value;
         const startCar = document.getElementById('start-car').value;
-        // Get all station inputs, even if empty, for consistent restoration
         const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
 
         const seatSelections = {};
-        document.querySelectorAll('.station-select').forEach(select => {
-          if (select.value) {
-            // Store only the part of ID after "select-" to make it generic (e.g., "9-1")
-            seatSelections[select.id.substring(7)] = select.value;
+        document.querySelectorAll('.station-label').forEach(label => {
+          if (label.textContent) {
+            seatSelections[label.id.substring(6)] = label.textContent;
           }
         });
 
@@ -930,19 +903,22 @@
           startCar: startCar,
           stations: stations,
           seatSelections: seatSelections,
-          carPerspectives: carPerspectiveState, // Include individual car perspectives
-          lastFilter: lastActiveStationFilter // Include the last active filter station
+          carPerspectives: carPerspectiveState,
+          lastFilter: lastActiveStationFilter
         };
+        
+        const hash = LZString.compressToEncodedURIComponent(JSON.stringify(exportData));
+        const currentUrl = window.location.href.split('#')[0];
+        return `${currentUrl}#${hash}`;
+      }
 
-        // Base64 encode the URI component to handle special characters in JSON
-        const hash = btoa(encodeURIComponent(JSON.stringify(exportData)));
-        const currentUrl = window.location.href.split('#')[0]; // Get URL without existing hash
-        const newUrl = `${currentUrl}#${hash}`;
-
-        // Update URL hash without reloading the page
+      /**
+       * Copies the export URL to the clipboard.
+       */
+      function exportSeatingCharts() {
+        const newUrl = generateExportUrl();
         window.history.replaceState(null, '', newUrl);
 
-        // Copy to clipboard
         navigator.clipboard.writeText(newUrl).then(() => {
           showMessage('已複製連結');
         }).catch(err => {
@@ -953,7 +929,6 @@
 
       /**
        * Displays a temporary message box.
-       * @param {string} message - The message to display.
        */
       function showMessage(message) {
         const messageBox = document.getElementById('message-box');
@@ -961,125 +936,184 @@
         messageBox.classList.add('show');
         setTimeout(() => {
           messageBox.classList.remove('show');
-        }, 2000); // Message disappears after 2 seconds
+        }, 2000);
       }
 
       /**
        * Loads settings and seating chart data from the URL hash.
-       * Handles parsing errors and falls back to default settings if hash is invalid.
        */
       function loadSettingsFromHash() {
-        if (location.hash) {
+        if (location.hash && location.hash.length > 1) {
           try {
-            const hashData = JSON.parse(decodeURIComponent(atob(location.hash.substring(1))));
+            const decompressedString = LZString.decompressFromEncodedURIComponent(location.hash.substring(1));
+            if (!decompressedString) {
+                throw new Error("Decompression failed, hash is invalid or empty.");
+            }
+            const hashData = JSON.parse(decompressedString);
             
             document.getElementById('num-cars').value = hashData.numCars || defaultNumCars;
             document.getElementById('start-car').value = hashData.startCar || defaultStartCar;
 
             const stationsContainer = document.getElementById('stations-container');
-            stationsContainer.innerHTML = ''; // Clear existing fields
+            stationsContainer.innerHTML = '';
             hashData.stations.forEach(station => {
-              addStationField(); // Add field for each loaded station
-              stationsContainer.lastElementChild.querySelector('.station-input').value = station; // Set its value
+              addStationField();
+              stationsContainer.lastElementChild.querySelector('.station-input').value = station;
             });
-            // If fewer stations are loaded than the initial default, fill up to default empty ones
             while (stationsContainer.children.length < defaultStationFields) {
                 addStationField();
             }
 
-            // Restore individual car perspectives
-            for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; } // Clear previous states
+            for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
             if (hashData.carPerspectives) {
                 Object.assign(carPerspectiveState, hashData.carPerspectives);
             }
 
-            // Trigger settings confirmation to generate charts based on loaded data.
-            // Pass false to confirmSettings to prevent it from saving this state to history again,
-            // as the initial load is handled separately.
             confirmSettings(false);
 
-            // A small delay to ensure DOM elements are fully rendered before applying selections from hash.
             setTimeout(() => {
-                // Apply seat selections from hash
                 if (hashData.seatSelections) {
                     for (const seatIdBase in hashData.seatSelections) {
-                        const selectId = `select-${seatIdBase}`; // Reconstruct full ID
-                        const seatNumId = `seat-${seatIdBase}`; // Reconstruct full seat number ID
-
-                        const selectElement = document.getElementById(selectId);
-                        if (selectElement) {
-                            selectElement.value = hashData.seatSelections[seatIdBase];
-                            toggleSeatColor(seatNumId, hashData.seatSelections[seatIdBase]);
+                        const labelId = `label-${seatIdBase}`;
+                        const seatNumId = `seat-${seatIdBase}`;
+                        const labelElement = document.getElementById(labelId);
+                        if (labelElement) {
+                            const station = hashData.seatSelections[seatIdBase];
+                            labelElement.textContent = station;
+                            toggleSeatColor(seatNumId, station);
                         }
                     }
                 }
 
-                // Then apply the last global station filter from hash
                 if (hashData.lastFilter && currentStations.includes(hashData.lastFilter)) {
                     updateStations(hashData.lastFilter, currentStations);
-                } else { // If no filter or invalid, show all buttons
+                } else {
                     const buttons = document.querySelectorAll('#global-station-buttons button');
                     buttons.forEach(button => {
                         button.style.display = 'inline-block';
                         button.classList.remove('active-filter');
                     });
                 }
-            }, 100); // Small delay to ensure DOM elements are fully rendered
+            }, 100);
 
-            // Automatically switch to the "座位表" tab
             openTab(null, 'charts-tab');
-
-            // After all data is loaded and rendered, save this initial state to history for undo functionality.
             saveState();
 
           } catch (e) {
             console.error("Failed to parse hash:", e);
             alert("無法解析網址中的座位表資料，請檢查連結是否正確。將恢復預設設定。");
-            resetSettingsToDefault(); // Fallback to reset settings if hash is invalid
-            // Still open to settings tab after clearing for invalid hash
+            resetSettingsToDefault();
             openTab(null, 'settings-tab');
           }
         } else {
-          resetSettingsToDefault(); // If no hash, reset settings to initial state
-          openTab(null, 'settings-tab'); // Ensure settings tab is active on fresh load
+          resetSettingsToDefault();
+          openTab(null, 'settings-tab');
         }
       }
 
       /**
        * Imports predefined train data into the settings fields.
-       * @param {string} trainName - The key for the train data in trainDataPresets.
        */
       function importQuickData(trainName) {
           const preset = trainDataPresets[trainName];
           if (preset) {
               document.getElementById('num-cars').value = preset.numCars;
               document.getElementById('start-car').value = preset.startCar;
-
               const stationsContainer = document.getElementById('stations-container');
-              stationsContainer.innerHTML = ''; // Clear existing fields
-
+              stationsContainer.innerHTML = '';
               preset.stations.forEach(station => {
                   addStationField();
                   stationsContainer.lastElementChild.querySelector('.station-input').value = station;
               });
-              // Ensure default number of empty fields are present if loaded stations are fewer
               while (stationsContainer.children.length < defaultStationFields) {
                   addStationField();
               }
-              // Clear seat selections and car perspectives when importing new data
-              // This is important because the new data might not match old selections/perspectives
-              document.querySelectorAll('.station-select').forEach(select => {
-                  select.value = '';
-                  toggleSeatColor(select.getAttribute('data-seat-id'), '');
+              document.querySelectorAll('.station-label').forEach(label => {
+                  label.textContent = '';
+                  toggleSeatColor(`seat-${label.id.substring(6)}`, '');
               });
               for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
-
-              confirmSettings(); // Generate charts and save state after quick import
+              confirmSettings();
           } else {
               console.error('Unknown train preset:', trainName);
           }
       }
 
+      // --- Modal Functions ---
+      const stationModal = document.getElementById('station-modal');
+      const qrCodeModal = document.getElementById('qrcode-modal');
+      const qrCodeDisplay = document.getElementById('qrcode-display');
+      let qrCodeInstance = null;
+
+      function openStationModal(seatIdBase) {
+        stationModal.dataset.seatId = seatIdBase; // Store which seat is being edited
+        const buttonContainer = document.getElementById('modal-station-buttons');
+        buttonContainer.innerHTML = ''; // Clear old buttons
+
+        const filterIndex = lastActiveStationFilter ? currentStations.indexOf(lastActiveStationFilter) : -1;
+        const availableStations = currentStations.filter((_, index) => index > filterIndex);
+
+        const clearButton = document.createElement('button');
+        clearButton.textContent = '清除';
+        clearButton.style.backgroundColor = '#ffdddd';
+        clearButton.onclick = () => setStationForSeat('', seatIdBase);
+        buttonContainer.appendChild(clearButton);
+
+        availableStations.forEach(station => {
+          const button = document.createElement('button');
+          button.textContent = station;
+          button.onclick = () => setStationForSeat(station, seatIdBase);
+          buttonContainer.appendChild(button);
+        });
+        
+        stationModal.style.display = 'block';
+      }
+
+      function closeStationModal() {
+        stationModal.style.display = 'none';
+      }
+
+      function setStationForSeat(stationName, seatIdBase) {
+        const label = document.getElementById(`label-${seatIdBase}`);
+        if (label) {
+          label.textContent = stationName;
+        }
+        toggleSeatColor(`seat-${seatIdBase}`, stationName);
+        closeStationModal();
+        saveState();
+      }
+
+      function showHandoverQRCode() {
+        const url = generateExportUrl();
+        
+        qrCodeDisplay.innerHTML = ''; // Clear previous QR code if any
+        
+        new QRCode(qrCodeDisplay, {
+            text: url,
+            width: 256,
+            height: 256,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        qrCodeModal.style.display = 'block';
+      }
+
+      function closeQRCodeModal() {
+          qrCodeModal.style.display = 'none';
+          qrCodeDisplay.innerHTML = ''; // Clean up the QR code to free memory
+      }
+      
+      // Close modal if user clicks outside of the content area
+      window.onclick = function(event) {
+        if (event.target == stationModal) {
+          closeStationModal();
+        }
+        if (event.target == qrCodeModal) {
+          closeQRCodeModal();
+        }
+      }
 
       // Initialize on page load
       window.onload = function() {
