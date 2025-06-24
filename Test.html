@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>壓縮資料分享</title>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+</head>
+<body>
+  <h1>前端壓縮資料分享</h1>
+  <button onclick="generateUrl()">產生分享連結</button>
+  <p id="result"></p>
+
+  <script>
+    function generateUrl() {
+      const data = { name: "Jiahe", hobby: "coding", timestamp: Date.now() };
+      const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+      const shareUrl = `${location.origin}${location.pathname}#${compressed}`;
+      document.getElementById("result").textContent = shareUrl;
+    }
+
+    // 解壓縮（進入頁面自動解析 hash）
+    if (location.hash) {
+      const compressed = location.hash.slice(1);
+      const decompressed = LZString.decompressFromEncodedURIComponent(compressed);
+      const data = JSON.parse(decompressed);
+      console.log("還原的資料：", data);
+    }
+  </script>
+</body>
+</html>
