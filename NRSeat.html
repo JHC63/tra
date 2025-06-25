@@ -462,8 +462,9 @@
         <h1>自由座座位表</h1>
         <div style="margin-bottom: 20px;">
             <button class="undo-button" onclick="undoLastAction()" title="上一步">&#x21BA;</button>
-            <button onclick="exportSeatingCharts()">存檔/複製連結</button>
-            <button onclick="showHandoverQRCode()">Qrcode</button>
+            <button onclick="exportSeatingCharts()">複製網址</button>
+            <button onclick="showHandoverQRCode()">生成Qrcode</button>
+<p style="color:blue ; margin-top: 14px;">本網頁是以網址紀錄當下表格狀態，驗完票記得點擊「複製網址」按鈕，然後在記事本貼上網址當備份。</p>
         </div>
         <div class="quick-import-area station-filter-area" style="margin-bottom: 20px;">
             <div class="quick-import-buttons" id="global-station-buttons"></div>
@@ -489,7 +490,7 @@
         <span class="close-button" onclick="closeQRCodeModal()">&times;</span>
         <h2>交班 QR Code</h2>
         <div id="qrcode-display" style="display: flex; justify-content: center; padding: 20px;"></div>
-        <p style="text-align: center;">請使用另一裝置掃描此 QR Code 以載入目前的座位表狀態。</p>
+        <p style="text-align: center;">請用手勢將圖片放大方便對方掃描，如Qrcode錯誤或無法產生，請點擊「複製網址」按鈕後到 <a href="https://qrcode-generator.tw/" target="_blank">https://qrcode-generator.tw/</a> 這個網站生成。</p>
       </div>
     </div>
 
