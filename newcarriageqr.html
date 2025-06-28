@@ -47,6 +47,10 @@
         .button-group button.active {
             background-color: #28a745;
         }
+        /* 新增按鈕樣式 */
+        .button-group button.reverse-btn {
+            background-color: #fd7e14;
+        }
         .group-name {
             font-size: 24px;
             margin: 20px 0;
@@ -64,8 +68,7 @@
             text-align: center;
         }
         .qrcode-item .text-content {
-            font-family:
-monospace;
+            font-family: monospace;
             font-size: 20px;
             margin-bottom: 10px;
         }
@@ -77,7 +80,7 @@ monospace;
         .qrcode-item canvas {
             max-width: none;
         }
-        .additional-info { /* 新增的 CSS 樣式 */
+        .additional-info {
             color: red;
             font-weight: bold;
             margin-top: 10px;
@@ -90,7 +93,7 @@ monospace;
         <h1>車廂 QR Code 生成器</h1>
         <div class="controls">
             <label>請輸入車廂第1車號碼再點擊車型：</label>
-            <input type="number" id="inputNumber" value="777">
+            <input type="number" id="inputNumber" value="" oninput="generateQRCodes()">
         </div>
         <div class="button-group">
             <button id="btnA" onclick="showGroup('A')">500型</button>
@@ -99,34 +102,54 @@ monospace;
             <button id="btnD" onclick="showGroup('D')">900型</button>
             <button id="btnE" onclick="showGroup('E')">3000型</button>
             <button id="btnF" onclick="showGroup('F')">普悠瑪</button>
+            <button id="reverseOrderBtn" class="reverse-btn" onclick="toggleOrder()" style="display: none;">順序切換</button>
         </div>
         <div class="group-name" id="currentGroupName"></div>
-        <div id="additionalMessage" class="additional-info"></div> <div id="qrcodeDisplay" class="qrcode-container"></div>
+        <div id="additionalMessage" class="additional-info"></div>
+        <div id="qrcodeDisplay" class="qrcode-container"></div>
     </div>
 
     <script>
         let currentGroup = '';
+        let isReversed = false; // 用於追蹤目前的順序狀態
 
+        // 切換車型
         function showGroup(group) {
             currentGroup = group;
+            isReversed = false; // 切換車型時，重置為正常順序
             document.querySelectorAll('.button-group button').forEach(btn => btn.classList.remove('active'));
             document.getElementById(`btn${group}`).classList.add('active');
-
-            // 獲取新增的訊息顯示區域
+            
             const additionalMessageDiv = document.getElementById('additionalMessage');
-            additionalMessageDiv.textContent = ''; // 先清空舊訊息
+            additionalMessageDiv.textContent = ''; 
 
             if (group === 'A') {
                 additionalMessageDiv.textContent = '注意EMC、EM方向';
             }
 
+            // 控制順序切換按鈕的顯示與隱藏
+            const reverseBtn = document.getElementById('reverseOrderBtn');
+            if (['A', 'B', 'C', 'D'].includes(group)) {
+                reverseBtn.style.display = 'inline-block';
+            } else {
+                reverseBtn.style.display = 'none';
+            }
+
             generateQRCodes();
         }
+        
+        // 點擊順序切換按鈕
+        function toggleOrder() {
+            isReversed = !isReversed; // 切換順序狀態 (true/false)
+            generateQRCodes(); // 重新生成 QR Code
+        }
 
+        // 生成 QR Code 的主函式
         function generateQRCodes() {
             const inputNum = parseInt(document.getElementById('inputNumber').value);
             if (isNaN(inputNum)) {
-                alert('請輸入有效數字');
+                // 如果尚未選擇車型，不顯示警告
+                if (currentGroup) alert('請輸入有效數字');
                 return;
             }
 
@@ -134,8 +157,7 @@ monospace;
             display.innerHTML = '';
             let data = [];
             let name = '';
-            let carNumber = 1;
-
+            
             switch (currentGroup) {
                 case 'A':
                     name = '500型';
@@ -170,14 +192,8 @@ monospace;
                     const yen = sec - (sec % 100) + (sec % 100) * 2;
                     const cent = yen - (yen % 100) + (yen % 100) - 1;
                     data = [
-                        `40TED${inputNum}`,
-                        `40TEMA${at}`,
-                        `45TEP${inputNum}`,
-                        `40TEMB${hash}`,
-                        `40TEMB${yen}`,
-                        `45TEP${sec}`,
-                        `40TEMA${cent}`,
-                        `40TED${sec}`
+                        `40TED${inputNum}`, `40TEMA${at}`, `45TEP${inputNum}`, `40TEMB${hash}`,
+                        `40TEMB${yen}`, `45TEP${sec}`, `40TEMA${cent}`, `40TED${sec}`
                     ];
                     break;
                 default:
@@ -185,7 +201,13 @@ monospace;
             }
 
             document.getElementById('currentGroupName').textContent = name;
+            
+            // 根據 isReversed 狀態決定是否反轉 data 陣列
+            if (isReversed) {
+                data.reverse();
+            }
 
+            let carNumber = 1; // 車廂編號永遠從 1 開始
             data.forEach(text => {
                 const item = document.createElement('div');
                 item.className = 'qrcode-item';
@@ -198,7 +220,7 @@ monospace;
                 const carLabel = document.createElement('div');
                 carLabel.className = 'car-number';
                 carLabel.textContent = `第 ${carNumber} 車`;
-                carNumber++;
+                carNumber++; // 編號遞增
 
                 item.appendChild(label);
                 item.appendChild(qrcodeDiv);
@@ -214,9 +236,9 @@ monospace;
             });
         }
 
-        // 初始載入預設為 A 組
+        // 頁面載入時預設顯示 A 組
         document.addEventListener('DOMContentLoaded', () => {
-            showGroup('A');
+            showGroup('');
         });
     </script>
 </body>
