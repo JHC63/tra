@@ -7,84 +7,124 @@
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: "Segoe UI", Arial, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
             min-height: 100vh;
-            background-color: #f4f4f4;
+            background-color: #f0f2f5;
             padding: 20px;
         }
+
         .container {
             background-color: #fff;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 900px;
+            max-width: 920px;
             text-align: center;
         }
-        .controls, .button-group {
+
+        h1 {
+            font-size: 32px;
+            color: #333;
             margin-bottom: 20px;
         }
+
         .controls input {
-            padding: 10px;
-            font-size: 26px;
-            width: 100px;
+            padding: 12px;
+            font-size: 24px;
+            width: 120px;
             text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-top: 10px;
         }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
         .button-group button {
-            padding: 10px 20px;
-            margin: 5px;
+            flex: 0 0 120px;
+            padding: 12px 10px;
             font-size: 16px;
-            cursor: pointer;
-            background-color: #007bff;
-            color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
         }
+
+        #btnA { background-color: #007bff; }
+        #btnB { background-color: #17a2b8; }
+        #btnC { background-color: #6f42c1; }
+        #btnD { background-color: #20c997; }
+        #btnE { background-color: #ffc107; color: #212529; }
+        #btnF { background-color: #dc3545; }
+        #btnG { background-color: #fd7e14; }
+
         .button-group button.active {
-            background-color: #28a745;
+            box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.7);
+            transform: scale(1.05);
         }
-        /* 新增按鈕樣式 */
-        .button-group button.reverse-btn {
-            background-color: #fd7e14;
+
+        .reverse-btn {
+            background-color: #343a40 !important;
+            color: #fff !important;
         }
+
         .group-name {
             font-size: 24px;
-            margin: 20px 0;
+            margin: 20px 0 10px;
             color: #28a745;
             font-weight: bold;
         }
+
+        .additional-info {
+            color: red;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
         .qrcode-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 30px;
+            gap: 24px;
             margin-top: 20px;
         }
+
         .qrcode-item {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             text-align: center;
+            animation: fadeIn 0.5s ease-in-out;
         }
-        .qrcode-item .text-content {
+
+        .text-content {
             font-family: monospace;
-            font-size: 20px;
+            font-size: 18px;
             margin-bottom: 10px;
         }
-        .qrcode-item .car-number {
+
+        .car-number {
             font-weight: bold;
-            font-size: 20px;
-            margin-top: 8px;
-        }
-        .qrcode-item canvas {
-            max-width: none;
-        }
-        .additional-info {
-            color: red;
-            font-weight: bold;
+            font-size: 18px;
             margin-top: 10px;
-            font-size: 1.2em;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -112,45 +152,32 @@
 
     <script>
         let currentGroup = '';
-        let isReversed = false; // 用於追蹤目前的順序狀態
+        let isReversed = false;
 
-        // 切換車型
         function showGroup(group) {
             currentGroup = group;
-            isReversed = false; // 切換車型時，重置為正常順序
+            isReversed = false;
             document.querySelectorAll('.button-group button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`btn${group}`).classList.add('active');
-            
+            const activeBtn = document.getElementById(`btn${group}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
             const additionalMessageDiv = document.getElementById('additionalMessage');
-            additionalMessageDiv.textContent = ''; 
+            additionalMessageDiv.textContent = group === 'A' ? '注意EMC、EM方向' : '';
 
-            if (group === 'A') {
-                additionalMessageDiv.textContent = '注意EMC、EM方向';
-            }
-
-            // 控制順序切換按鈕的顯示與隱藏
-            const reverseBtn = document.getElementById('reverseOrderBtn');
-            if (['A', 'B', 'C', 'D'].includes(group)) {
-                reverseBtn.style.display = 'inline-block';
-            } else {
-                reverseBtn.style.display = 'none';
-            }
+            document.getElementById('reverseOrderBtn').style.display = ['A','B','C','D'].includes(group) ? 'inline-block' : 'none';
 
             generateQRCodes();
         }
-        
-        // 點擊順序切換按鈕
+
         function toggleOrder() {
-            isReversed = !isReversed; // 切換順序狀態 (true/false)
-            generateQRCodes(); // 重新生成 QR Code
+            isReversed = !isReversed;
+            generateQRCodes();
         }
 
-        // 生成 QR Code 的主函式
         function generateQRCodes() {
             const inputNum = parseInt(document.getElementById('inputNumber').value);
             if (isNaN(inputNum)) {
-                // 如果尚未選擇車型，不顯示警告
-                if (currentGroup) alert('請輸入有效數字');
+                //if (currentGroup) alert('請輸入有效數字');
                 return;
             }
 
@@ -158,7 +185,7 @@
             display.innerHTML = '';
             let data = [];
             let name = '';
-            
+
             switch (currentGroup) {
                 case 'A':
                     name = '500型';
@@ -197,32 +224,26 @@
                         `40TEMB${yen}`, `45TEP${sec}`, `40TEMA${cent}`, `40TED${sec}`
                     ];
                     break;
-                    case 'G':
-    name = '太魯閣';
-    const gLast2 = inputNum % 100;
-    const gHash = inputNum - gLast2 + gLast2 * 2;
-    const gAt = gHash - (gHash % 100) + (gHash % 100) - 1;
-    const gSec = inputNum - gLast2 + gLast2 + 1;
-    const gYen = gSec - (gSec % 100) + (gSec % 100) * 2;
-    const gCent = gYen - (gYen % 100) + (gYen % 100) - 1;
-    data = [
-        `40TED${inputNum}`, `40TEM${gAt}`, `45TEP${inputNum}`, `40TEM${gHash}`,
-        `40TEM${gYen}`, `45TEP${gSec}`, `40TEM${gCent}`, `40TED${gSec}`
-    ];
-    break;
-
-                default:
-                    name = '';
+                case 'G':
+                    name = '太魯閣';
+                    const gLast2 = inputNum % 100;
+                    const gHash = inputNum - gLast2 + gLast2 * 2;
+                    const gAt = gHash - (gHash % 100) + (gHash % 100) - 1;
+                    const gSec = inputNum - gLast2 + gLast2 + 1;
+                    const gYen = gSec - (gSec % 100) + (gSec % 100) * 2;
+                    const gCent = gYen - (gYen % 100) + (gYen % 100) - 1;
+                    data = [
+                        `40TED${inputNum}`, `40TEM${gAt}`, `45TEP${inputNum}`, `40TEM${gHash}`,
+                        `40TEM${gYen}`, `45TEP${gSec}`, `40TEMA${gCent}`, `40TED${gSec}`
+                    ];
+                    break;
             }
 
             document.getElementById('currentGroupName').textContent = name;
-            
-            // 根據 isReversed 狀態決定是否反轉 data 陣列
-            if (isReversed) {
-                data.reverse();
-            }
 
-            let carNumber = 1; // 車廂編號永遠從 1 開始
+            if (isReversed) data.reverse();
+
+            let carNumber = 1;
             data.forEach(text => {
                 const item = document.createElement('div');
                 item.className = 'qrcode-item';
@@ -235,7 +256,7 @@
                 const carLabel = document.createElement('div');
                 carLabel.className = 'car-number';
                 carLabel.textContent = `第 ${carNumber} 車`;
-                carNumber++; // 編號遞增
+                carNumber++;
 
                 item.appendChild(label);
                 item.appendChild(qrcodeDiv);
@@ -251,7 +272,6 @@
             });
         }
 
-        // 頁面載入時預設顯示 A 組
         document.addEventListener('DOMContentLoaded', () => {
             showGroup('');
         });
