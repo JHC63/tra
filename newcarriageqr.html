@@ -102,6 +102,7 @@
             <button id="btnD" onclick="showGroup('D')">900型</button>
             <button id="btnE" onclick="showGroup('E')">3000型</button>
             <button id="btnF" onclick="showGroup('F')">普悠瑪</button>
+            <button id="btnG" onclick="showGroup('G')">太魯閣</button>
             <button id="reverseOrderBtn" class="reverse-btn" onclick="toggleOrder()" style="display: none;">首末互換</button>
         </div>
         <div class="group-name" id="currentGroupName"></div>
@@ -196,6 +197,20 @@
                         `40TEMB${yen}`, `45TEP${sec}`, `40TEMA${cent}`, `40TED${sec}`
                     ];
                     break;
+                    case 'G':
+    name = '太魯閣';
+    const gLast2 = inputNum % 100;
+    const gHash = inputNum - gLast2 + gLast2 * 2;
+    const gAt = gHash - (gHash % 100) + (gHash % 100) - 1;
+    const gSec = inputNum - gLast2 + gLast2 + 1;
+    const gYen = gSec - (gSec % 100) + (gSec % 100) * 2;
+    const gCent = gYen - (gYen % 100) + (gYen % 100) - 1;
+    data = [
+        `40TED${inputNum}`, `40TEM${gAt}`, `45TEP${inputNum}`, `40TEM${gHash}`,
+        `40TEM${gYen}`, `45TEP${gSec}`, `40TEM${gCent}`, `40TED${gSec}`
+    ];
+    break;
+
                 default:
                     name = '';
             }
