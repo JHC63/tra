@@ -10,8 +10,8 @@
       :root {
         --font-size-base: 22px; /* 基礎字體大小 */
         --font-size-large: 25px; /* 用於主要標題和部分重要文字 */
-        --font-size-button: 26px; /* 按鈕文字大小 */
-        --font-size-tab: 32px;   /* 分頁按鈕文字大小 */
+        --font-size-button: 28px; /* 按鈕文字大小 */
+        --font-size-tab: 70px;   /* 分頁按鈕文字大小 */
         --seat-table-cell-height: 75px; /* 座位表格單元格高度 */
         --container-max-width: 900px;
       }
@@ -26,6 +26,7 @@
         display: flex;
         flex-direction: column;
         min-height: 100vh;
+        padding-bottom: 80px;
       }
       .container {
         max-width: var(--container-max-width);
@@ -47,7 +48,7 @@
       }
       .tab-button {
         padding: 10px 20px;
-        font-size: var(--font-size-tab); /* 分頁按鈕文字放大 8px */
+        font-size: var(--font-size-tab);
         cursor: pointer;
         border: 1px solid #ccc;
         background-color: #f0f0f0;
@@ -81,39 +82,32 @@
         margin-bottom: 10px;
         display: flex;
         align-items: center;
-        justify-content: center; /* Center the items horizontally */
+        justify-content: center;
         width: 100%;
       }
-      label {
-        width: 180px;
+      /* 需求 1: 設定頁字體放大 */
+      #settings-tab label {
+        width: 220px; /* 稍微加寬以容納更大的字體 */
         text-align: right;
         margin-right: 10px;
         white-space: nowrap;
-        font-size: var(--font-size-large); /* 設置自由座車廂數、開始車廂文字大小為 25px */
+        font-size: calc(var(--font-size-large) + 4px); /* 放大 4px */
       }
-
-      /* Styles for '自由座車廂數' and '自由座開始車廂' input fields */
-      .tab-content#settings-tab > .input-group input[type="number"],
-      .tab-content#settings-tab > .input-group input[type="text"] {
-        width: 100px; /* Half of original 200px */
-        max-width: 100px; /* Ensure it respects max-width */
-        flex-grow: 0; /* Prevents input from growing */
-        padding: 5px;
-        font-size: var(--font-size-base);
+      #settings-tab .input-group input[type="number"],
+      #settings-tab .input-group input[type="text"] {
+        width: 120px;
+        max-width: 120px;
+        flex-grow: 0;
+        padding: 8px; /* 增加內距 */
+        font-size: calc(var(--font-size-base) + 4px); /* 放大 4px */
       }
-
-      /* Styles for '停靠站' input fields */
-      .station-input {
-        width: 250px; /* Adjust width for station fields */
-        max-width: 300px; /* Max width for station fields */
-        flex-grow: 1; /* Allow station inputs to grow within their group */
-        padding: 5px;
-        font-size: var(--font-size-base);
+      #settings-tab h1, #settings-tab h2 {
+        font-size: calc(var(--font-size-large) + 4px); /* 放大 4px */
       }
 
       button {
         padding: 10px 20px;
-        font-size: var(--font-size-button); /* 按鈕文字放大 4px */
+        font-size: var(--font-size-button);
         background-color: white;
         color: black;
         border: 1px solid #333;
@@ -125,17 +119,7 @@
       button:hover {
         background-color: #f0f0f0;
       }
-      .button-container {
-        margin: 20px auto;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 10px;
-        width: 100%;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 10px;
-        margin-bottom: 30px;
-      }
+
       .car-chart-container {
           margin-bottom: 40px;
           padding-bottom: 20px;
@@ -158,21 +142,20 @@
         vertical-align: middle;
         background-color: white;
         color: black;
-        font-size: var(--font-size-base); /* 數字表格內的數字文字大小 */
       }
-      /* Specific widths for seat number and station select cells */
       td.seat-number-cell {
-          width: 30px; /* Smaller width for seat number */
+          width: 45px;
           padding: 0;
+          font-size: var(--font-size-large);
+          font-weight: bold;
       }
       td.station-select-cell {
-          width: 100px; /* Wider width to accommodate station name */
-          min-width: 80px; /* Ensure minimum width */
-          max-width: 150px; /* Optional: set a max-width if names are very long */
-          padding: 0; /* Remove padding for flexbox centering */
+          width: 100px;
+          min-width: 80px;
+          max-width: 150px;
+          padding: 0;
           cursor: pointer;
           transition: background-color 0.2s;
-          /* Use flexbox for perfect centering */
           display: flex;
           align-items: center;
           justify-content: center;
@@ -181,7 +164,7 @@
         background-color: #f0f0f0;
       }
       .station-label {
-        font-size: calc(var(--font-size-base) + 4px); /* Enlarge font */
+        font-size: calc(var(--font-size-base) + 4px);
         font-weight: bold;
         white-space: nowrap;
         overflow: hidden;
@@ -189,7 +172,7 @@
       }
       .header, .footer {
         font-weight: bold;
-        font-size: var(--font-size-large); /* 車廂號碼文字大小為 25px */
+        font-size: var(--font-size-large);
       }
       .seat.selected {
         background-color: #00ff00;
@@ -198,7 +181,6 @@
         background-color: #ddd;
       }
 
-      /* Message box for copy success */
       .message-box {
         position: fixed;
         top: 50%;
@@ -208,7 +190,7 @@
         color: white;
         padding: 15px 30px;
         border-radius: 8px;
-        z-index: 2000; /* Ensure it's on top */
+        z-index: 2000;
         opacity: 0;
         transition: opacity 0.5s ease-in-out;
         pointer-events: none;
@@ -219,7 +201,7 @@
       .undo-button {
         background: none;
         border: none;
-        font-size: 25px;var(--font-size-button); /* 上一步按鈕文字放大 4px */
+        font-size: 25px;
         cursor: pointer;
         margin-right: 10px;
         vertical-align: middle;
@@ -228,7 +210,6 @@
           color: #555;
       }
 
-      /* Quick Import Area Styles */
       .quick-import-area {
         border: 1px solid #ccc;
         border-radius: 8px;
@@ -247,12 +228,11 @@
         background-color: #f9f9f9;
         padding: 0 10px;
         font-weight: bold;
-        font-size: var(--font-size-large); /* 統一為 25px */
+        font-size: calc(var(--font-size-large) + 4px);
         color: #333;
       }
-      /* New style for the station filter area header */
       .quick-import-area.station-filter-area::before {
-          content: "停靠站"; /* Change content for this specific area */
+          content: "停靠站";
       }
 
       .quick-import-buttons {
@@ -265,18 +245,9 @@
         flex: 1 1 calc(25% - 7.5px);
         max-width: calc(25% - 7.5px);
         margin: 0;
-        font-size: var(--font-size-button); /* 放大 4px */
-      }
-      h1 {
-          font-size: var(--font-size-large); /* 統一「設置自由座車廂」和「自由座座位表」文字大小為 25px */
-          margin-top: 10px;
-          margin-bottom: 20px;
-      }
-      h2 {
-          font-size: var(--font-size-large); /* 統一「手動輸入停靠站」文字大小為 25px */
+        font-size: var(--font-size-button);
       }
 
-      /* Modal (Floating Window) Styles */
       .modal {
         display: none; 
         position: fixed; 
@@ -297,6 +268,14 @@
         max-width: 600px;
         border-radius: 8px;
         position: relative;
+        text-align: left;
+      }
+      #qrcode-modal .modal-content {
+        max-width: 400px;
+      }
+      #qrcode-display img {
+        max-width: 100%;
+        height: auto;
       }
       .close-button {
         color: #aaa;
@@ -321,90 +300,66 @@
         flex: 1 1 150px;
       }
 
+      .mobile-action-bar {
+          display: none;
+      }
 
-      /* 手機響應式調整 */
+      /* --- 手機響應式調整 --- */
       @media (max-width: 768px) {
           :root {
               --font-size-base: 14px;
               --font-size-large: 18px;
               --font-size-button: 16px;
               --font-size-tab: 24px;
-              --seat-table-cell-width: 35px; /* 手機上座位表格單元格更小 */
               --seat-table-cell-height: 60px;
-              --container-max-width: 95%; /* 容器佔據更多螢幕寬度 */
+              --container-max-width: 95%;
           }
 
-          .container {
-              margin: 10px auto;
-              padding: 10px;
+          body { padding-bottom: 70px; }
+          .container { margin: 10px auto; padding: 10px; }
+          .tab-button { padding: 8px 15px; }
+          label { width: auto; text-align: left; margin-right: 5px; }
+          #settings-tab .input-group input[type="number"],
+          #settings-tab .input-group input[type="text"],
+          #settings-tab label,
+          #settings-tab h1, #settings-tab h2 { font-size: calc(var(--font-size-large) + 2px); } /* 行動版設定頁也微調 */
+          button { padding: 8px 15px; font-size: var(--font-size-button); margin: 3px; }
+          table { min-width: unset; width: 100%; }
+          th, td { height: var(--seat-table-cell-height); }
+          td.seat-number-cell { width: 35px; font-size: var(--font-size-large); }
+          td.station-select-cell { width: 80px; min-width: 60px; max-width: 100px; }
+          .station-label { font-size: calc(var(--font-size-base) + 2px); }
+          .header, .footer { font-size: var(--font-size-large); }
+          .modal-content { width: 90%; margin: 25% auto; }
+          .car-chart-container { margin-bottom: 60px; padding-bottom: 20px; border-bottom: 2px solid #eee; }
+          td.station-select-cell { border: 2px dashed #007bff; border-radius: 5px; background-color: #f8f9fa; }
+          
+          .quick-import-buttons { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; }
+          .quick-import-buttons button { flex: none; max-width: none; width: 100%; margin: 0; }
+          /* 需求 2: 座位表頁面在行動裝置上，車站按鈕字體放大 */
+          #global-station-buttons.quick-import-buttons button {
+              font-size: calc(var(--font-size-button) + 4px); /* 放大 4px */
           }
 
-          .tab-button {
-              padding: 8px 15px;
+          .desktop-actions { display: none; }
+          .mobile-action-bar {
+              display: flex;
+              justify-content: space-around;
+              align-items: center;
+              position: fixed;
+              bottom: 0;
+              left: 0;
+              width: 100%;
+              background-color: #f8f9fa;
+              padding: 10px 5px;
+              box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+              z-index: 1000;
           }
-
-          label {
-              width: auto; /* 手機上標籤寬度自動調整 */
-              text-align: left;
-              margin-right: 5px;
-              font-size: var(--font-size-large);
-          }
-
-          /* Specific adjustments for '自由座車廂數' and '自由座開始車廂' on mobile */
-          .tab-content#settings-tab > .input-group input[type="number"],
-          .tab-content#settings-tab > .input-group input[type="text"] {
-              width: 80px; /* Keep them small on mobile */
-              max-width: 80px;
-              padding: 8px;
-          }
-
-          /* Specific adjustments for '停靠站' on mobile */
-          .station-input {
-              width: 100%; /* Make them full width on mobile */
-              max-width: none;
-              padding: 8px;
-          }
-
-          button {
-              padding: 8px 15px;
+          .mobile-action-bar button {
               font-size: var(--font-size-button);
-              margin: 3px;
-          }
-
-          .quick-import-buttons button {
-              flex: 1 1 calc(50% - 5px); /* 手機上每行最多 2 個按鈕 */
-              max-width: calc(50% - 5px);
-          }
-
-          table {
-              min-width: unset; /* 移除最小寬度限制 */
-              width: 100%; /* 表格寬度填滿 */
-              font-size: var(--font-size-base);
-          }
-          th, td {
-              height: var(--seat-table-cell-height);
-              font-size: var(--font-size-base);
-          }
-          td.seat-number-cell {
-              width: 25px; /* Adjust for mobile */
-          }
-          td.station-select-cell {
-              width: 80px; /* Adjust for mobile */
-              min-width: 60px;
-              max-width: 100px;
-          }
-          .station-label {
-              font-size: calc(var(--font-size-base) + 2px); /* Adjust font size for mobile */
-          }
-          .header, .footer {
-              font-size: var(--font-size-large);
-          }
-          h1, h2 {
-              font-size: var(--font-size-large);
-          }
-          .modal-content {
-              width: 90%;
-              margin: 25% auto;
+              flex: 1;
+              margin: 0 5px;
+              padding: 10px 5px;
           }
       }
     </style>
@@ -420,24 +375,24 @@
         <div class="quick-import-area">
           <div class="quick-import-buttons">
             <button onclick="importQuickData('110次')">110次</button>
-<button onclick="importQuickData('111次')">111次</button>
-<button onclick="importQuickData('116次')">116次</button>
-<button onclick="importQuickData('117次')">117次</button>
-<button onclick="importQuickData('119次')">119次</button>
-<button onclick="importQuickData('120次')">120次</button>
-<button onclick="importQuickData('127次')">127次</button>
-<button onclick="importQuickData('131次')">131次</button>
-<button onclick="importQuickData('132次')">132次</button>
-<button onclick="importQuickData('133次')">133次</button>
-<button onclick="importQuickData('143次')">143次</button>
-<button onclick="importQuickData('145次')">145次</button>
-<button onclick="importQuickData('146次')">146次</button>
-<button onclick="importQuickData('148次')">148次</button>
-<button onclick="importQuickData('154次')">154次</button>
-<button onclick="importQuickData('158次')">158次</button>
-<button onclick="importQuickData('160次')">160次</button>
-<button onclick="importQuickData('193次')">193次</button>
-<button onclick="importQuickData('194次')">194次</button>
+            <button onclick="importQuickData('111次')">111次</button>
+            <button onclick="importQuickData('116次')">116次</button>
+            <button onclick="importQuickData('117次')">117次</button>
+            <button onclick="importQuickData('119次')">119次</button>
+            <button onclick="importQuickData('120次')">120次</button>
+            <button onclick="importQuickData('127次')">127次</button>
+            <button onclick="importQuickData('131次')">131次</button>
+            <button onclick="importQuickData('132次')">132次</button>
+            <button onclick="importQuickData('133次')">133次</button>
+            <button onclick="importQuickData('143次')">143次</button>
+            <button onclick="importQuickData('145次')">145次</button>
+            <button onclick="importQuickData('146次')">146次</button>
+            <button onclick="importQuickData('148次')">148次</button>
+            <button onclick="importQuickData('154次')">154次</button>
+            <button onclick="importQuickData('158次')">158次</button>
+            <button onclick="importQuickData('160次')">160次</button>
+            <button onclick="importQuickData('193次')">193次</button>
+            <button onclick="importQuickData('194次')">194次</button>
           </div>
         </div>
         <h1>設置自由座車廂</h1>
@@ -449,7 +404,7 @@
           <label for="start-car">自由座開始車廂：</label>
           <input type="number" id="start-car" value="9" min="1">
         </div>
-        <h2>手動輸入停靠站(可以空白）</h2>
+        <h2>手動輸入停靠站(可空白)</h2>
         <div id="stations-container"></div>
         <button onclick="addStationField()">新增停靠站欄位</button>
         <div>
@@ -460,22 +415,30 @@
 
       <div id="charts-tab" class="tab-content">
         <h1>自由座座位表</h1>
-        <div style="margin-bottom: 20px;">
+        <div class="desktop-actions" style="margin-bottom: 20px;">
             <button class="undo-button" onclick="undoLastAction()" title="上一步">&#x1F519;</button>
             <button onclick="exportSeatingCharts()">複製網址</button>
             <button onclick="showHandoverQRCode()">生成Qrcode</button>
-<p style="color:blue ; margin-top: 14px;">本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「複製網址」按鈕，然後在記事本貼上網址當備份。</p>
         </div>
         <div class="quick-import-area station-filter-area" style="margin-bottom: 20px;">
             <div class="quick-import-buttons" id="global-station-buttons"></div>
         </div>
-
-        <div id="seating-charts">
-          </div>
+        <div id="seating-charts"></div>
       </div>
     </div>
 
     <div id="message-box" class="message-box"></div>
+
+    <div id="startup-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button" onclick="closeStartupModal()">&times;</span>
+        <h2 style="text-align: center;">注意</h2>
+        <p style="font-size: 20px; color: blue; line-height: 1.6;">本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「複製網址」按鈕，然後在記事本貼上網址當備份。</p>
+        <div style="text-align: center; margin-top: 20px;">
+          <button onclick="closeStartupModal()">我明白了</button>
+        </div>
+      </div>
+    </div>
 
     <div id="station-modal" class="modal">
       <div class="modal-content">
@@ -490,159 +453,68 @@
         <span class="close-button" onclick="closeQRCodeModal()">&times;</span>
         <h2>交班 QR Code</h2>
         <div id="qrcode-display" style="display: flex; justify-content: center; padding: 20px;"></div>
-        <p style="text-align: center;">請用手勢將圖片放大方便對方掃描，如Qrcode錯誤或無法產生，請點擊「複製網址」按鈕後到 <a href="https://qrcode-generator.tw/" target="_blank">https://qrcode-generator.tw/</a> 這個網站生成。</p>
+        <p style="text-align: center;">請用手勢將圖片放大方便對方掃描。如Qrcode錯誤，請點擊「複製網址」按鈕後到 <a href="https://qrcode-generator.tw/" target="_blank">其他網站</a> 生成。</p>
       </div>
     </div>
 
+    <div class="mobile-action-bar">
+        <button onclick="undoLastAction()" title="上一步">&#x1F519;</button>
+        <button onclick="exportSeatingCharts()">複製網址</button>
+        <button onclick="showHandoverQRCode()">Qrcode</button>
+    </div>
+
     <script>
-      // Define the seat layout for a single row.
       const seatLayout = [
         [1, 3, 4, 2], [5, 7, 8, 6], [9, 11, 12, 10], [13, 15, 16, 14],
         [17, 19, 20, 18], [21, 23, 24, 22], [25, 27, 28, 26], [29, 31, 32, 30],
         [33, 35, 36, 34], [37, 39, 40, 38], [41, 43, 44, 42], [45, 47, 48, 46],
         [49, 51, 52, 50]
       ];
-
-      // Store the state for each car's perspective
       const carPerspectiveState = {};
-      let currentStations = []; // To store stations for consistent use across functions
-      let lastActiveStationFilter = null; // Stores the last clicked station for filtering
-
-      // Default values for settings
+      let currentStations = [];
+      let lastActiveStationFilter = null;
       const defaultNumCars = 1;
       const defaultStartCar = 9;
-      const defaultStationFields = 15; // Number of empty station input fields to show by default
-
-      // History for undo functionality
+      const defaultStationFields = 5;
       let history = [];
       let historyPointer = -1;
-
-      /**
-       * Predefined train data for quick import.
-       */
       const trainDataPresets = {
-          '110次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"]
-    },
-    '111次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["七堵", "南港", "松山", "臺北", "板橋", "桃園", "臺中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"]
-    },
-    '116次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "臺中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
-    },
-    '117次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["基隆", "八堵", "七堵", "汐止", "南港", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "苗栗", "豐原", "臺中", "彰化", "員林", "斗六", "民雄", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"]
-    },
-    '119次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化"]
-    },
-    '120次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
-    },
-    '127次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"]
-    },
-    '131次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["七堵", "南港", "松山", "臺北", "板橋", "新竹", "臺中", "彰化", "嘉義", "臺南", "高雄", "屏東", "潮州"]
-    },
-    '132次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["枋寮", "潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "新竹", "板橋", "臺北", "松山", "南港", "七堵"]
-    },
-    '133次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "大肚", "彰化", "員林", "斗六", "嘉義", "新營", "善化", "臺南", "新左營", "高雄", "鳳山", "屏東", "潮州"]
-    },
-    '143次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["七堵", "汐止", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化", "嘉義", "臺南", "高雄", "鳳山", "屏東", "潮州"]
-    },
-    '145次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"]
-    },
-    '146次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
-    },
-    '148次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"]
-    },
-    '154次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "臺中", "桃園", "板橋", "臺北", "松山", "南港"]
-    },
-    '158次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
-    },
-    '160次': {
-        numCars: 3,
-        startCar: 9,
-        stations: ["田中", "社頭", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"]
-    },
-    '193次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"]
-    },
-    '194次': {
-        numCars: 1,
-        startCar: 9,
-        stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"]
-    }
-
+          '110次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
+          '111次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "桃園", "臺中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"] },
+          '116次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "臺中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+          '117次': { numCars: 3, startCar: 9, stations: ["基隆", "八堵", "七堵", "汐止", "南港", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "苗栗", "豐原", "臺中", "彰化", "員林", "斗六", "民雄", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
+          '119次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化"] },
+          '120次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+          '127次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
+          '131次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "新竹", "臺中", "彰化", "嘉義", "臺南", "高雄", "屏東", "潮州"] },
+          '132次': { numCars: 1, startCar: 9, stations: ["枋寮", "潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "新竹", "板橋", "臺北", "松山", "南港", "七堵"] },
+          '133次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "大肚", "彰化", "員林", "斗六", "嘉義", "新營", "善化", "臺南", "新左營", "高雄", "鳳山", "屏東", "潮州"] },
+          '143次': { numCars: 1, startCar: 9, stations: ["七堵", "汐止", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化", "嘉義", "臺南", "高雄", "鳳山", "屏東", "潮州"] },
+          '145次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
+          '146次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+          '148次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
+          '154次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "臺中", "桃園", "板橋", "臺北", "松山", "南港"] },
+          '158次': { numCars: 3, startCar: 9, stations: ["彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+          '160次': { numCars: 3, startCar: 9, stations: ["田中", "社頭", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+          '193次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
+          '194次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] }
       };
 
-      /**
-       * Saves the current state of the seating chart and settings to the history array.
-       */
       function saveState() {
           const numCars = document.getElementById('num-cars').value;
           const startCar = document.getElementById('start-car').value;
           const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
-
           const seatSelections = {};
           document.querySelectorAll('.station-label').forEach(label => {
               if (label.textContent) {
                   seatSelections[label.id.substring(6)] = label.textContent;
               }
           });
-
           const state = {
-              numCars: numCars,
-              startCar: startCar,
-              stations: stations,
-              seatSelections: seatSelections,
+              numCars, startCar, stations, seatSelections,
               carPerspectives: { ...carPerspectiveState },
               lastFilter: lastActiveStationFilter
           };
-
           if (historyPointer < history.length - 1) {
               history = history.slice(0, historyPointer + 1);
           }
@@ -650,59 +522,38 @@
           historyPointer = history.length - 1;
       }
 
-      /**
-       * Loads a specific state from the history array.
-       */
       function loadState(state) {
           if (!state) return;
-
           document.getElementById('num-cars').value = state.numCars || defaultNumCars;
           document.getElementById('start-car').value = state.startCar || defaultStartCar;
-
           const stationsContainer = document.getElementById('stations-container');
           stationsContainer.innerHTML = '';
           (state.stations || []).forEach(station => {
               addStationField();
-              stationsContainer.lastElementChild.querySelector('.station-input').value = station;
+              stationsContainer.lastElementChild.querySelector('input').value = station;
           });
           while (stationsContainer.children.length < defaultStationFields) {
               addStationField();
           }
-
-          for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
+          Object.keys(carPerspectiveState).forEach(key => delete carPerspectiveState[key]);
           if (state.carPerspectives) {
               Object.assign(carPerspectiveState, state.carPerspectives);
           }
-
           confirmSettings(false);
-
           setTimeout(() => {
               if (state.seatSelections) {
                   document.querySelectorAll('.station-label').forEach(label => {
                       const seatIdBase = label.id.substring(6);
-                      const seatNumId = `seat-${seatIdBase}`;
-                      const selectedStation = state.seatSelections[seatIdBase] || '';
-                      
-                      label.textContent = selectedStation;
-                      toggleSeatColor(seatNumId, selectedStation);
+                      label.textContent = state.seatSelections[seatIdBase] || '';
+                      toggleSeatColor(`seat-${seatIdBase}`, label.textContent);
                   });
               }
-
               if (state.lastFilter && currentStations.includes(state.lastFilter)) {
                   updateStations(state.lastFilter, currentStations);
-              } else {
-                  const buttons = document.querySelectorAll('#global-station-buttons button');
-                  buttons.forEach(button => {
-                      button.style.display = 'inline-block';
-                      button.classList.remove('active-filter');
-                  });
               }
           }, 50);
       }
       
-      /**
-       * Reverts the seating chart state to the previous step in history.
-       */
       function undoLastAction() {
           if (historyPointer > 0) {
               historyPointer--;
@@ -712,28 +563,14 @@
           }
       }
 
-      // --- Tab Switching Logic ---
       function openTab(evt, tabId) {
-        const tabContents = document.getElementsByClassName("tab-content");
-        for (let i = 0; i < tabContents.length; i++) {
-          tabContents[i].style.display = "none";
-        }
-        const tabButtons = document.getElementsByClassName("tab-button");
-        for (let i = 0; i < tabButtons.length; i++) {
-          tabButtons[i].className = tabButtons[i].className.replace(" active", "");
-        }
+        document.querySelectorAll(".tab-content").forEach(tc => tc.style.display = "none");
+        document.querySelectorAll(".tab-button").forEach(tb => tb.classList.remove("active"));
         document.getElementById(tabId).style.display = "block";
-        if (evt) {
-          evt.currentTarget.className += " active";
-        } else {
-            const targetButton = document.querySelector(`.tab-button[onclick*="'${tabId}'"]`);
-            if (targetButton) {
-                targetButton.classList.add('active');
-            }
-        }
+        const button = evt ? evt.currentTarget : document.querySelector(`.tab-button[onclick*="'${tabId}'"]`);
+        if (button) button.classList.add("active");
       }
 
-      // --- Station Field Management ---
       function addStationField() {
         const container = document.getElementById('stations-container');
         const index = container.children.length + 1;
@@ -743,9 +580,6 @@
         container.appendChild(newField);
       }
 
-      /**
-       * Resets all input fields in the settings tab to their default values.
-       */
       function resetSettingsToDefault() {
         document.getElementById('num-cars').value = defaultNumCars;
         document.getElementById('start-car').value = defaultStartCar;
@@ -757,31 +591,22 @@
         document.getElementById('seating-charts').innerHTML = '';
         document.getElementById('global-station-buttons').innerHTML = '';
         lastActiveStationFilter = null;
-        for (const carNum in carPerspectiveState) {
-            delete carPerspectiveState[carNum];
-        }
+        Object.keys(carPerspectiveState).forEach(key => delete carPerspectiveState[key]);
         history = [];
         historyPointer = -1;
       }
 
-      /**
-       * Confirms settings, generates seating charts, and optionally saves the state.
-       */
       function confirmSettings(saveToHistory = true) {
         const numCars = parseInt(document.getElementById('num-cars').value) || defaultNumCars;
         const startCar = parseInt(document.getElementById('start-car').value) || defaultStartCar;
         currentStations = Array.from(document.querySelectorAll('.station-input'))
-          .map(input => input.value.trim())
-          .filter(val => val !== '');
-
+          .map(input => input.value.trim()).filter(val => val !== '');
         if (currentStations.length === 0) {
           alert('請至少輸入一個停靠站！');
           return;
         }
-
         const output = document.getElementById('seating-charts');
         output.innerHTML = '';
-
         const globalStationButtonsContainer = document.getElementById('global-station-buttons');
         globalStationButtonsContainer.innerHTML = '';
         currentStations.forEach(station => {
@@ -794,364 +619,215 @@
           globalStationButtonsContainer.appendChild(button);
         });
         lastActiveStationFilter = null;
-
         for (let car = startCar; car < startCar + numCars; car++) {
-          if (carPerspectiveState[car] === undefined) {
-              carPerspectiveState[car] = false;
-          }
+          if (carPerspectiveState[car] === undefined) carPerspectiveState[car] = false;
           output.appendChild(generateSeatingChart(car, currentStations, carPerspectiveState[car]));
         }
-
-        if (saveToHistory) {
-            saveState();
-        }
+        if (saveToHistory) saveState();
         openTab(null, 'charts-tab');
       }
 
-      /**
-       * Generates the HTML structure for a single car's seating chart.
-       */
       function generateSeatingChart(carNumber, stations, isFlipped) {
         const carContainer = document.createElement('div');
         carContainer.className = 'car-chart-container';
         carContainer.id = `car-chart-${carNumber}`;
-
         const table = document.createElement('table');
         let displaySeatLayout = JSON.parse(JSON.stringify(seatLayout));
-
         if (isFlipped) {
             displaySeatLayout.forEach(row => row.reverse());
             displaySeatLayout.reverse();
         }
-
         const headerText = `第${carNumber}車`;
-        const footerText = `第${carNumber}車`;
-
-        let html = `<tr><th colspan="9" class="header">${headerText}</th></tr>`;
-        html += `
-          <tr>
-            <th colspan="2" class="label">窗戶</th>
-            <th colspan="2" class="label">走道</th>
-            <th class="empty"></th>
-            <th colspan="2" class="label">走道</th>
-            <th colspan="2" class="label">窗戶</th>
-          </tr>
-        `;
-
+        let html = `<tr><th colspan="9" class="header">${headerText}</th></tr><tr><th colspan="2" class="label">窗戶</th><th colspan="2" class="label">走道</th><th class="empty"></th><th colspan="2" class="label">走道</th><th colspan="2" class="label">窗戶</th></tr>`;
         displaySeatLayout.forEach(row => {
           html += '<tr>';
           row.forEach((seatNum, index) => {
             const seatIdBase = `${carNumber}-${seatNum}`;
             html += `<td class="seat seat-number-cell" id="seat-${seatIdBase}">${seatNum}</td>`;
-            html += `<td class="station-select-cell" onclick="openStationModal('${seatIdBase}')">
-                       <span class="station-label" id="label-${seatIdBase}"></span>
-                     </td>`;
-
-            if (index === 1) {
-              html += '<td class="aisle"></td>';
-            }
+            html += `<td class="station-select-cell" onclick="openStationModal('${seatIdBase}')"><span class="station-label" id="label-${seatIdBase}"></span></td>`;
+            if (index === 1) html += '<td class="aisle"></td>';
           });
           html += '</tr>';
         });
-
-        html += `
-          <tr>
-            <th colspan="2" class="label">窗戶</th>
-            <th colspan="2" class="label">走道</th>
-            <th class="empty"></th>
-            <th colspan="2" class="label">走道</th>
-            <th colspan="2" class="label">窗戶</th>
-          </tr>
-          <tr><th colspan="9" class="footer">${footerText}</th></tr>
-        `;
-
+        html += `<tr><th colspan="2" class="label">窗戶</th><th colspan="2" class="label">走道</th><th class="empty"></th><th colspan="2" class="label">走道</th><th colspan="2" class="label">窗戶</th></tr><tr><th colspan="9" class="footer">${headerText}</th></tr>`;
         table.innerHTML = html;
         carContainer.appendChild(table);
-
         const toggleButton = document.createElement('button');
-        toggleButton.id = `toggle-perspective-${carNumber}`;
         toggleButton.textContent = '視角切換';
         toggleButton.onclick = () => {
             toggleIndividualPerspective(carNumber, stations);
             saveState();
         };
         carContainer.appendChild(toggleButton);
-
         return carContainer;
       }
 
-      /**
-       * Toggles the background color of a seat based on whether a station is selected.
-       */
       function toggleSeatColor(seatId, value) {
-        const seat = document.getElementById(seatId);
-        if (seat) {
-          if (value) {
-            seat.classList.add('selected');
-          } else {
-            seat.classList.remove('selected');
-          }
-        }
+        document.getElementById(seatId)?.classList.toggle('selected', !!value);
       }
 
-      /**
-       * Updates the global station filter.
-       */
       function updateStations(selectedStation, stations) {
         lastActiveStationFilter = selectedStation;
         const selectedIndex = stations.indexOf(selectedStation);
-
-        const buttons = document.querySelectorAll('#global-station-buttons button');
-        buttons.forEach(button => {
-            button.classList.remove('active-filter');
-            if (button.textContent === selectedStation) {
-                button.classList.add('active-filter');
-            }
+        document.querySelectorAll('#global-station-buttons button').forEach(button => {
             const buttonIndex = stations.indexOf(button.textContent);
+            button.classList.toggle('active-filter', button.textContent === selectedStation);
             button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
         });
-
         document.querySelectorAll('.station-label').forEach(label => {
-            const currentSelection = label.textContent;
-            if (currentSelection && stations.indexOf(currentSelection) <= selectedIndex) {
-                const seatIdBase = label.id.substring(6);
+            if (label.textContent && stations.indexOf(label.textContent) <= selectedIndex) {
                 label.textContent = '';
-                toggleSeatColor(`seat-${seatIdBase}`, '');
+                toggleSeatColor(`seat-${label.id.substring(6)}`, '');
             }
         });
       }
       
-      /**
-       * Toggles the perspective for a specific car.
-       */
       function toggleIndividualPerspective(carNumber, stations) {
           carPerspectiveState[carNumber] = !carPerspectiveState[carNumber];
-
           const oldCarChartContainer = document.getElementById(`car-chart-${carNumber}`);
           if (oldCarChartContainer) {
               const currentCarSelections = {};
               oldCarChartContainer.querySelectorAll('.station-label').forEach(label => {
                   currentCarSelections[label.id.substring(6)] = label.textContent;
               });
-
               const newCarChartContainer = generateSeatingChart(carNumber, stations, carPerspectiveState[carNumber]);
               oldCarChartContainer.parentNode.replaceChild(newCarChartContainer, oldCarChartContainer);
-
               for (const seatIdBase in currentCarSelections) {
                   const labelElement = document.getElementById(`label-${seatIdBase}`);
                   if (labelElement) {
-                      const station = currentCarSelections[seatIdBase];
-                      labelElement.textContent = station;
-                      toggleSeatColor(`seat-${seatIdBase}`, station);
+                      labelElement.textContent = currentCarSelections[seatIdBase];
+                      toggleSeatColor(`seat-${seatIdBase}`, labelElement.textContent);
                   }
               }
           }
       }
 
-      /**
-       * Generates the export URL with the current state, using shortened keys for smaller size.
-       * @returns {string} The generated URL.
-       */
       function generateExportUrl() {
-        const numCars = document.getElementById('num-cars').value;
-        const startCar = document.getElementById('start-car').value;
+        // 使用索引法進行極致壓縮
         const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
-
         const seatSelections = {};
         document.querySelectorAll('.station-label').forEach(label => {
-          if (label.textContent) {
-            seatSelections[label.id.substring(6)] = label.textContent;
-          }
+            if (label.textContent) {
+                const stationIndex = stations.indexOf(label.textContent);
+                if (stationIndex > -1) {
+                    seatSelections[label.id.substring(6)] = stationIndex;
+                }
+            }
         });
+        const filterIndex = lastActiveStationFilter ? stations.indexOf(lastActiveStationFilter) : -1;
 
         const shortKeyExportData = {
-          n: numCars,
-          c: startCar,
-          t: stations,
-          s: seatSelections,
+          n: document.getElementById('num-cars').value,
+          c: document.getElementById('start-car').value,
+          t: stations, // 車站列表 (必要)
+          s: seatSelections, // 座位選擇 (已轉換為索引)
           p: carPerspectiveState,
-          f: lastActiveStationFilter
+          f: filterIndex > -1 ? filterIndex : null // 篩選器 (已轉換為索引)
         };
-        
         const hash = LZString.compressToEncodedURIComponent(JSON.stringify(shortKeyExportData));
-        const currentUrl = window.location.href.split('#')[0];
-        return `${currentUrl}#${hash}`;
+        return `${window.location.href.split('#')[0]}#${hash}`;
       }
 
-      /**
-       * Copies the export URL to the clipboard.
-       */
       function exportSeatingCharts() {
         const newUrl = generateExportUrl();
         window.history.replaceState(null, '', newUrl);
-
-        navigator.clipboard.writeText(newUrl).then(() => {
-          showMessage('已複製連結');
-        }).catch(err => {
-          console.error('複製失敗:', err);
-          showMessage('複製失敗，請手動複製網址');
-        });
+        navigator.clipboard.writeText(newUrl).then(() => showMessage('已複製連結'), () => showMessage('複製失敗，請手動複製網址'));
       }
 
-      /**
-       * Displays a temporary message box.
-       */
       function showMessage(message) {
         const messageBox = document.getElementById('message-box');
         messageBox.textContent = message;
         messageBox.classList.add('show');
-        setTimeout(() => {
-          messageBox.classList.remove('show');
-        }, 2000);
+        setTimeout(() => messageBox.classList.remove('show'), 2000);
       }
 
-      /**
-       * Loads settings and seating chart data from the URL hash.
-       */
       function loadSettingsFromHash() {
-        if (location.hash && location.hash.length > 1) {
-          try {
-            const decompressedString = LZString.decompressFromEncodedURIComponent(location.hash.substring(1));
-            if (!decompressedString) {
-                throw new Error("Decompression failed, hash is invalid or empty.");
-            }
-            const hashData = JSON.parse(decompressedString);
-            
-            const fullData = {
-                numCars: hashData.n,
-                startCar: hashData.c,
-                stations: hashData.t,
-                seatSelections: hashData.s,
-                carPerspectives: hashData.p,
-                lastFilter: hashData.f
-            };
-            
-            document.getElementById('num-cars').value = fullData.numCars || defaultNumCars;
-            document.getElementById('start-car').value = fullData.startCar || defaultStartCar;
-
-            const stationsContainer = document.getElementById('stations-container');
-            stationsContainer.innerHTML = '';
-            (fullData.stations || []).forEach(station => {
-              addStationField();
-              stationsContainer.lastElementChild.querySelector('.station-input').value = station;
-            });
-            while (stationsContainer.children.length < defaultStationFields) {
-                addStationField();
-            }
-
-            for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
-            if (fullData.carPerspectives) {
-                Object.assign(carPerspectiveState, fullData.carPerspectives);
-            }
-
-            confirmSettings(false);
-
-            setTimeout(() => {
-                if (fullData.seatSelections) {
-                    for (const seatIdBase in fullData.seatSelections) {
-                        const labelId = `label-${seatIdBase}`;
-                        const seatNumId = `seat-${seatIdBase}`;
-                        const labelElement = document.getElementById(labelId);
-                        if (labelElement) {
-                            const station = fullData.seatSelections[seatIdBase];
-                            labelElement.textContent = station;
-                            toggleSeatColor(seatNumId, station);
-                        }
-                    }
-                }
-
-                if (fullData.lastFilter && currentStations.includes(fullData.lastFilter)) {
-                    updateStations(fullData.lastFilter, currentStations);
-                } else {
-                    const buttons = document.querySelectorAll('#global-station-buttons button');
-                    buttons.forEach(button => {
-                        button.style.display = 'inline-block';
-                        button.classList.remove('active-filter');
-                    });
-                }
-            }, 100);
-
-            openTab(null, 'charts-tab');
-            saveState();
-
-          } catch (e) {
-            console.error("Failed to parse hash:", e);
-            alert("無法解析網址中的座位表資料，請檢查連結是否正確。將恢復預設設定。");
-            resetSettingsToDefault();
-            openTab(null, 'settings-tab');
+        if (!location.hash || location.hash.length <= 1) {
+          resetSettingsToDefault();
+          openTab(null, 'settings-tab');
+          document.getElementById('startup-modal').style.display = 'block';
+          return;
+        }
+        try {
+          const decompressedString = LZString.decompressFromEncodedURIComponent(location.hash.substring(1));
+          if (!decompressedString) throw new Error("Decompression failed");
+          const hashData = JSON.parse(decompressedString);
+          
+          // 將索引還原為車站名稱
+          const stations = hashData.t || [];
+          const seatSelectionsWithNames = {};
+          if (hashData.s) {
+              for (const seatId in hashData.s) {
+                  const stationIndex = hashData.s[seatId];
+                  if (stations[stationIndex] !== undefined) {
+                      seatSelectionsWithNames[seatId] = stations[stationIndex];
+                  }
+              }
           }
-        } else {
+          const lastFilterName = (hashData.f !== null && stations[hashData.f]) ? stations[hashData.f] : null;
+
+          const fullData = {
+              numCars: hashData.n, 
+              startCar: hashData.c, 
+              stations: stations,
+              seatSelections: seatSelectionsWithNames, // 使用還原後的名稱
+              carPerspectives: hashData.p, 
+              lastFilter: lastFilterName // 使用還原後的名稱
+          };
+          loadState(fullData);
+          openTab(null, 'charts-tab');
+          saveState();
+        } catch (e) {
+          console.error("Failed to parse hash:", e);
+          alert("無法解析網址中的座位表資料，請檢查連結是否正確。將恢復預設設定。");
           resetSettingsToDefault();
           openTab(null, 'settings-tab');
         }
       }
 
-      /**
-       * Imports predefined train data into the settings fields.
-       */
       function importQuickData(trainName) {
           const preset = trainDataPresets[trainName];
           if (preset) {
-              document.getElementById('num-cars').value = preset.numCars;
-              document.getElementById('start-car').value = preset.startCar;
-              const stationsContainer = document.getElementById('stations-container');
-              stationsContainer.innerHTML = '';
-              preset.stations.forEach(station => {
-                  addStationField();
-                  stationsContainer.lastElementChild.querySelector('.station-input').value = station;
-              });
-              while (stationsContainer.children.length < defaultStationFields) {
-                  addStationField();
-              }
-              document.querySelectorAll('.station-label').forEach(label => {
-                  label.textContent = '';
-                  toggleSeatColor(`seat-${label.id.substring(6)}`, '');
-              });
-              for (const carNum in carPerspectiveState) { delete carPerspectiveState[carNum]; }
-              confirmSettings();
-          } else {
-              console.error('Unknown train preset:', trainName);
+              loadState(preset);
+              saveState();
           }
       }
 
-      // --- Modal Functions ---
       const stationModal = document.getElementById('station-modal');
       const qrCodeModal = document.getElementById('qrcode-modal');
       const qrCodeDisplay = document.getElementById('qrcode-display');
+      const startupModal = document.getElementById('startup-modal');
 
       function openStationModal(seatIdBase) {
         stationModal.dataset.seatId = seatIdBase; 
         const buttonContainer = document.getElementById('modal-station-buttons');
         buttonContainer.innerHTML = ''; 
-
         const filterIndex = lastActiveStationFilter ? currentStations.indexOf(lastActiveStationFilter) : -1;
         const availableStations = currentStations.filter((_, index) => index > filterIndex);
-
         const clearButton = document.createElement('button');
         clearButton.textContent = '清除';
         clearButton.style.backgroundColor = '#ffdddd';
         clearButton.onclick = () => setStationForSeat('', seatIdBase);
         buttonContainer.appendChild(clearButton);
-
         availableStations.forEach(station => {
           const button = document.createElement('button');
           button.textContent = station;
           button.onclick = () => setStationForSeat(station, seatIdBase);
           buttonContainer.appendChild(button);
         });
-        
         stationModal.style.display = 'block';
       }
 
-      function closeStationModal() {
-        stationModal.style.display = 'none';
+      function closeStationModal() { stationModal.style.display = 'none'; }
+      function closeQRCodeModal() {
+          qrCodeModal.style.display = 'none';
+          qrCodeDisplay.innerHTML = ''; 
       }
+      function closeStartupModal() { startupModal.style.display = 'none'; }
 
       function setStationForSeat(stationName, seatIdBase) {
         const label = document.getElementById(`label-${seatIdBase}`);
-        if (label) {
-          label.textContent = stationName;
-        }
+        if (label) label.textContent = stationName;
         toggleSeatColor(`seat-${seatIdBase}`, stationName);
         closeStationModal();
         saveState();
@@ -1160,37 +836,27 @@
       function showHandoverQRCode() {
         const dataToEncode = generateExportUrl();
         const encodedData = encodeURIComponent(dataToEncode);
-        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=256x256&ecc=H&format=svg&data=${encodedData}`;
+        const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&ecc=H&format=svg&data=${encodedData}`;
 
         qrCodeDisplay.innerHTML = ''; 
 
         const qrImage = document.createElement('img');
         qrImage.src = qrApiUrl;
         qrImage.alt = '交班 QR Code';
-        qrImage.width = 256;
-        qrImage.height = 256;
+        qrImage.style.width = '300px';
+        qrImage.style.height = '300px';
 
         qrCodeDisplay.appendChild(qrImage);
         qrCodeModal.style.display = 'block';
       }
-
-      function closeQRCodeModal() {
-          qrCodeModal.style.display = 'none';
-          qrCodeDisplay.innerHTML = ''; 
-      }
       
       window.onclick = function(event) {
-        if (event.target == stationModal) {
-          closeStationModal();
-        }
-        if (event.target == qrCodeModal) {
-          closeQRCodeModal();
-        }
+        if (event.target == stationModal) closeStationModal();
+        if (event.target == qrCodeModal) closeQRCodeModal();
+        if (event.target == startupModal) closeStartupModal();
       }
 
-      window.onload = function() {
-        loadSettingsFromHash();
-      };
+      window.onload = loadSettingsFromHash;
     </script>
   </body>
   </html>
