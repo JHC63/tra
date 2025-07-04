@@ -434,7 +434,7 @@
         <span class="close-button" onclick="closeStartupModal()">&times;</span>
         <h2 style="text-align: center;">注意</h2>
         <p style="font-size: 20px; color: red; line-height: 1.6;">1.勿在LINE直接點擊網址使用本網頁！</p>
-        <p style="font-size: 20px; color: black; line-height: 1.6;">2.本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「存檔/複製網址」按鈕，以防資料遺失。</p>
+        <p style="font-size: 20px; color: black; line-height: 1.6;">2.本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「存檔/複製網址」按鈕，並請不要關閉網頁以防資料遺失。</p>
          <p style="font-size: 20px; color: black; line-height: 1.6;">3.如要註記員工，可以在最下方停靠站欄位新增站名為員工。</p>
         <div style="text-align: center; margin-top: 20px;">
           <button onclick="closeStartupModal()">我明白了</button>
@@ -461,7 +461,7 @@
 
     <div class="mobile-action-bar">
         <button onclick="undoLastAction()" title="上一步">&#x1F519;</button>
-        <button onclick="exportSeatingCharts()">複製網址</button>
+        <button onclick="exportSeatingCharts()">存檔/複製網址</button>
         <button onclick="showHandoverQRCode()">Qrcode</button>
     </div>
 
@@ -733,7 +733,7 @@
       function exportSeatingCharts() {
         const newUrl = generateExportUrl();
         window.history.replaceState(null, '', newUrl);
-        navigator.clipboard.writeText(newUrl).then(() => showMessage('已複製連結'), () => showMessage('複製失敗，請手動複製網址'));
+        navigator.clipboard.writeText(newUrl).then(() => showMessage('已存檔/複製連結'), () => showMessage('複製失敗，請手動複製網址'));
       }
 
       function showMessage(message) {
