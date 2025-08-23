@@ -248,6 +248,12 @@
         font-size: var(--font-size-button);
       }
 
+      /* --- START: NEW STYLE FOR SETTINGS TAB QUICK IMPORT BUTTONS --- */
+      #settings-tab .quick-import-buttons button {
+        font-size: calc(var(--font-size-button) + 2px);
+      }
+      /* --- END: NEW STYLE --- */
+
       .modal {
         display: none; 
         position: fixed; 
@@ -454,7 +460,8 @@
         <h2 style="text-align: center;">注意</h2>
         <p style="font-size: 20px; color: red; line-height: 1.6;">1.勿在LINE直接點擊網址使用本網頁！</p>
         <p style="font-size: 20px; color: black; line-height: 1.6;">2.本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「存檔/複製網址」按鈕，並請不要關閉網頁以防資料遺失。</p>
-         <p style="font-size: 20px; color: black; line-height: 1.6;">3.如要註記員工，可以在最下方停靠站欄位新增站名為員工。</p>
+         <p style="font-size: 20px; color: black; line-height: 1.6;">3.<a href="https://jhc63.github.io/tra/newcarriageqr.html" target="_blank">列車編組Qrcode生成器網頁</a></p>
+          <p style="font-size: 20px; color: black; line-height: 1.6;">4.祝各位師傅跑車順風、平安。</p>
         <div style="text-align: center; margin-top: 20px;">
           <button onclick="closeStartupModal()">我明白了</button>
         </div>
@@ -474,7 +481,7 @@
         <span class="close-button" onclick="closeQRCodeModal()">&times;</span>
         <h2>交班 QR Code</h2>
         <div id="qrcode-display" style="display: flex; justify-content: center; padding: 20px;"></div>
-        <p style="text-align: center;">請用手勢將圖片放大方便對方掃描。如Qrcode錯誤，請點擊「複製網址」按鈕後到 <a href="https://qrcode-generator.tw/" target="_blank">其他網站</a> 生成。</p>
+        <p style="text-align: center;">請用手勢將圖片放大方便對方掃描。如Qrcode錯誤，請點擊「存檔/複製網址」按鈕後到 <a href="https://qrcode-generator.tw/" target="_blank">其他網站</a> 生成。</p>
       </div>
     </div>
 
@@ -696,7 +703,7 @@
             button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
         });
         document.querySelectorAll('.station-label').forEach(label => {
-            if (label.textContent && stations.indexOf(label.textContent) <= selectedIndex) {
+            if (label.textContent && label.textContent !== '員工' && stations.indexOf(label.textContent) <= selectedIndex) {
                 label.textContent = '';
                 toggleSeatColor(`seat-${label.id.substring(6)}`, '');
             }
@@ -724,7 +731,6 @@
       }
 
       function generateExportUrl() {
-        // 使用索引法進行極致壓縮
         const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
         const seatSelections = {};
         document.querySelectorAll('.station-label').forEach(label => {
@@ -732,6 +738,8 @@
                 const stationIndex = stations.indexOf(label.textContent);
                 if (stationIndex > -1) {
                     seatSelections[label.id.substring(6)] = stationIndex;
+                } else if (label.textContent === '員工') {
+                    seatSelections[label.id.substring(6)] = 'E'; // Special code for 'Employee'
                 }
             }
         });
@@ -740,10 +748,10 @@
         const shortKeyExportData = {
           n: document.getElementById('num-cars').value,
           c: document.getElementById('start-car').value,
-          t: stations, // 車站列表 (必要)
-          s: seatSelections, // 座位選擇 (已轉換為索引)
+          t: stations,
+          s: seatSelections,
           p: carPerspectiveState,
-          f: filterIndex > -1 ? filterIndex : null // 篩選器 (已轉換為索引)
+          f: filterIndex > -1 ? filterIndex : null
         };
         const hash = LZString.compressToEncodedURIComponent(JSON.stringify(shortKeyExportData));
         return `${window.location.href.split('#')[0]}#${hash}`;
@@ -774,14 +782,15 @@
           if (!decompressedString) throw new Error("Decompression failed");
           const hashData = JSON.parse(decompressedString);
           
-          // 將索引還原為車站名稱
           const stations = hashData.t || [];
           const seatSelectionsWithNames = {};
           if (hashData.s) {
               for (const seatId in hashData.s) {
-                  const stationIndex = hashData.s[seatId];
-                  if (stations[stationIndex] !== undefined) {
-                      seatSelectionsWithNames[seatId] = stations[stationIndex];
+                  const stationData = hashData.s[seatId];
+                  if (typeof stationData === 'number' && stations[stationData] !== undefined) {
+                      seatSelectionsWithNames[seatId] = stations[stationData];
+                  } else if (stationData === 'E') {
+                      seatSelectionsWithNames[seatId] = '員工';
                   }
               }
           }
@@ -791,9 +800,9 @@
               numCars: hashData.n, 
               startCar: hashData.c, 
               stations: stations,
-              seatSelections: seatSelectionsWithNames, // 使用還原後的名稱
+              seatSelections: seatSelectionsWithNames,
               carPerspectives: hashData.p, 
-              lastFilter: lastFilterName // 使用還原後的名稱
+              lastFilter: lastFilterName
           };
           loadState(fullData);
           openTab(null, 'charts-tab');
@@ -825,11 +834,19 @@
         buttonContainer.innerHTML = ''; 
         const filterIndex = lastActiveStationFilter ? currentStations.indexOf(lastActiveStationFilter) : -1;
         const availableStations = currentStations.filter((_, index) => index > filterIndex);
+        
         const clearButton = document.createElement('button');
         clearButton.textContent = '清除';
         clearButton.style.backgroundColor = '#ffdddd';
         clearButton.onclick = () => setStationForSeat('', seatIdBase);
         buttonContainer.appendChild(clearButton);
+        
+        const employeeButton = document.createElement('button');
+        employeeButton.textContent = '員工';
+        employeeButton.style.backgroundColor = '#ddffdd';
+        employeeButton.onclick = () => setStationForSeat('員工', seatIdBase);
+        buttonContainer.appendChild(employeeButton);
+        
         availableStations.forEach(station => {
           const button = document.createElement('button');
           button.textContent = station;
