@@ -361,6 +361,25 @@
               margin: 0 5px;
               padding: 10px 5px;
           }
+
+          /* --- START: 新增的車站選擇介面美化樣式 (一列四欄) --- */
+          #modal-station-buttons {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 8px; /* 按鈕之間的間隙 */
+              margin-top: 20px;
+              padding: 0;
+          }
+
+          #modal-station-buttons button {
+              flex: none;
+              margin: 0;
+              padding: 12px 5px;
+              font-size: calc(var(--font-size-button) + 2px); /* 字體放大 2px */
+              border: 1px solid #ccc;
+              border-radius: 5px;
+          }
+          /* --- END: 新增的車站選擇介面美化樣式 --- */
       }
     </style>
   </head>
