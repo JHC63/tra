@@ -463,7 +463,7 @@
          <p style="font-size: 20px; color: black; line-height: 1.6;">3.<a href="https://jhc63.github.io/tra/newcarriageqr.html" target="_blank">列車編組Qrcode生成器網頁</a></p>
           <p style="font-size: 20px; color: black; line-height: 1.6;">4.祝各位師傅跑車順風、平安。</p>
         <div style="text-align: center; margin-top: 20px;">
-          <button onclick="closeStartupModal()">我明白了</button>
+          <button onclick="closeStartupModal()">收到</button>
         </div>
       </div>
     </div>
@@ -481,7 +481,7 @@
         <span class="close-button" onclick="closeQRCodeModal()">&times;</span>
         <h2>交班 QR Code</h2>
         <div id="qrcode-display" style="display: flex; justify-content: center; padding: 20px;"></div>
-        <p style="text-align: center;">請用手勢將圖片放大方便對方掃描。如Qrcode錯誤，請點擊「存檔/複製網址」按鈕後到 <a href="https://qrcode-generator.tw/" target="_blank">其他網站</a> 生成。</p>
+        <p style="text-align: center;">請用手勢將圖片放大方便對方掃描。如QRcode錯誤，請點擊「存檔/複製網址」按鈕後到 <a href="https://qrcode-generator.tw/" target="_blank">其他網站</a> 生成。</p>
       </div>
     </div>
 
@@ -760,7 +760,7 @@
       function exportSeatingCharts() {
         const newUrl = generateExportUrl();
         window.history.replaceState(null, '', newUrl);
-        navigator.clipboard.writeText(newUrl).then(() => showMessage('已存檔/複製連結'), () => showMessage('複製失敗，請手動複製網址'));
+        navigator.clipboard.writeText(newUrl).then(() => showMessage('已存檔/複製網址'), () => showMessage('複製失敗，請手動複製網址'));
       }
 
       function showMessage(message) {
