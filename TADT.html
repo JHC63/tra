@@ -353,7 +353,7 @@
             const json = JSON.stringify(state);
             const encoded = LZString.compressToEncodedURIComponent(json);
             history.replaceState(null, '', '#' + encoded);
-            alert('分享連結已產生並複製到網址列');
+            alert('儲存完畢');
             saveToLocal();
         }
 
