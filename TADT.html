@@ -3,107 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>台鐵列車到開輔助工具 v4.0</title>
+    <title>乘務人員輔助器 v5.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
     <style>
         :root {
-            --tra-blue: #003366;
-            --tra-orange: #ff7f00;
-            --highlight-blue: #007bff;
-            --success-green: #5cb85c;
-            --danger-red: #d9534f;
-            --light-gray: #f4f7f6;
+            --tra-blue: #003366; --tra-orange: #ff7f00; --highlight-blue: #007bff;
+            --success-green: #5cb85c; --danger-red: #d9534f; --light-gray: #f4f7f6;
             --border-color: #ddd;
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 0.5rem; /* 減少邊距以適應手機螢幕 */
-            background-color: var(--light-gray);
-            -webkit-tap-highlight-color: transparent; /* 移除觸控高亮效果 */
+            margin: 0; padding: 0.5rem; background-color: var(--light-gray);
+            -webkit-tap-highlight-color: transparent;
         }
-        .container {
-            max-width: 100%; /* 手機上全寬 */
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 1rem; /* 減少內邊距 */
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        h1 { color: var(--tra-blue); text-align: center; margin-top: 0; margin-bottom: 1rem; font-size: 1.6rem; /* 調整字體大小 */ }
+        .container { max-width: 100%; margin: 0 auto; background-color: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        h1 { color: var(--tra-blue); text-align: center; margin-top: 0; margin-bottom: 1rem; font-size: 1.6rem; }
         .input-container { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
-        #trainNoInput { width: 100%; box-sizing: border-box; padding: 1rem; font-size: 1.4rem; /* 增大字體便於輸入 */ border: 1px solid var(--border-color); border-radius: 5px; text-align: center; }
-        #searchBtn { width: 100%; box-sizing: border-box; padding: 1rem 1.5rem; /* 增大按鈕高度便於觸控 */ font-size: 1.4rem; background-color: var(--tra-orange); color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; touch-action: manipulation; /* 優化觸控 */ }
+        #trainNoInput { width: 100%; box-sizing: border-box; padding: 1rem; font-size: 1.4rem; border: 1px solid var(--border-color); border-radius: 5px; text-align: center; }
+        #searchBtn { width: 100%; box-sizing: border-box; padding: 1rem 1.5rem; font-size: 1.4rem; background-color: var(--tra-orange); color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; touch-action: manipulation; }
         #searchBtn:hover, #searchBtn:active { background-color: #e67300; }
-
-        /* 控制項 - 手機上調整為垂直排列以避免擁擠 */
         .controls { display: flex; flex-direction: column; gap: 0.8rem; align-items: flex-start; margin-bottom: 1rem; padding: 0.5rem; background-color: #f9f9f9; border-radius: 4px; }
         .control-group { display: flex; align-items: center; gap: 0.5rem; width: 100%; justify-content: space-between; }
-        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; /* 增大切換開關便於觸控 */ }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .toggle-switch input { display: none; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
         .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--tra-blue); }
         input:checked + .slider:before { transform: translateX(22px); }
-
         #result { margin-top: 0.5rem; }
         .info-message, .error-message { text-align: center; padding: 1.5rem 0; font-size: 1.1rem; }
         .error-message { color: var(--danger-red); background-color: #f2dede; border: 1px solid #ebccd1; border-radius: 4px; padding: 1rem; }
-        
-        /* 列表樣式 - 手機上優化為垂直佈局，增大間距 */
         .station-list { list-style-type: none; padding: 0; margin: 0; }
-        .station-item { border: 2px solid transparent; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background-color: #fdfdfd; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: border-color 0.2s; }
+        .station-item { border: 2px solid transparent; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background-color: #fdfdfd; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: all 0.2s; }
         .station-item.highlighted-station { border-color: var(--highlight-blue); }
-        
-        /* 1. 簡潔模式 CSS */
         .station-list.simple-mode .bottom-row { display: none; }
-
-        .top-row, .bottom-row { display: flex; flex-direction: column; /* 手機上改為垂直以適應窄螢幕 */ align-items: flex-start; gap: 0.5rem; }
+        .top-row, .bottom-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
         .top-row { margin-bottom: 0.8rem; }
         .station-header { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .station-name { font-weight: bold; font-size: 1.6rem; /* 增大站名字體 */ cursor: pointer; flex-grow: 1; }
+        .station-name { font-weight: bold; font-size: 1.6rem; cursor: pointer; flex-grow: 1; }
         .station-name.has-note::after { content: '📝'; margin-left: 5px; font-size: 0.9em; }
-        .service-icons { display: flex; gap: 0.8rem; /* 增大圖示間距便於觸控 */ }
-        .service-btn { position: relative; background: #e0e0e0; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem 0.8rem; /* 增大按鈕 */ font-size: 1.1rem; cursor: pointer; user-select: none; min-width: 50px; text-align: center; touch-action: manipulation; }
+        .service-icons { display: flex; gap: 0.8rem; }
+        .service-btn { position: relative; background: #e0e0e0; border: 1px solid #ccc; border-radius: 4px; padding: 0.6rem 0.8rem; font-size: 1.1rem; cursor: pointer; user-select: none; min-width: 50px; text-align: center; touch-action: manipulation; }
         .badge { position: absolute; top: -10px; right: -10px; background: var(--danger-red); color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; transform: scale(0); transition: transform 0.2s; }
         .badge.visible { transform: scale(1); }
-        .status-cell { min-width: 100px; text-align: right; /* 調整為右對齊 */ margin-top: 0.5rem; }
+        .status-cell { min-width: 100px; text-align: right; margin-top: 0.5rem; }
         .countdown { color: var(--danger-red); font-weight: bold; font-size: 1.2rem; }
-        
-        /* 3. 綠色圓圈樣式修正 - 增大便於觸控 */
-        .departed-circle { display: inline-block; width: 30px; height: 30px; background-color: var(--success-green); border-radius: 50%; cursor: pointer; touch-action: manipulation; }
-
-        .bottom-row { background-color: #f7f7f7; padding: 0.8rem; border-radius: 4px; flex-direction: row; justify-content: space-between; /* 底行保持水平但調整間距 */ }
+        .departed-circle { display: inline-block; width: 30px; height: 30px; background-color: var(--success-green); border-radius: 50%; cursor: default; }
+        .bottom-row { background-color: #f7f7f7; padding: 0.8rem; border-radius: 4px; flex-direction: row; justify-content: space-between; }
         .time-group { display: flex; align-items: center; gap: 0.5rem; }
-        .time-label { color: #555; font-size: 1rem; /* 調整字體 */ }
-        /* 4. 開車時間顯示秒數 */
-        .time-display { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; /* 調整大小 */ }
-        .time-adj-btn { background: #e9e9e9; border: 1px solid #ccc; width: 35px; height: 35px; /* 增大按鈕便於觸控 */ border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 18px; touch-action: manipulation; }
-
-        /* 備註 Modal - 手機上全屏優化 */
+        .time-label { color: #555; font-size: 1rem; }
+        .time-display { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; }
+        .time-adj-btn { background: #e9e9e9; border: 1px solid #ccc; width: 35px; height: 35px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 18px; touch-action: manipulation; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; z-index: 1000; }
         .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 95%; /* 手機上接近全寬 */ max-width: none; }
+        .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 95%; max-width: none; }
         .modal-actions { display: flex; justify-content: space-between; margin-top: 1rem; }
         .modal-actions button { padding: 0.8rem 1.5rem; font-size: 1.2rem; border: none; border-radius: 5px; cursor: pointer; }
         #closeNoteBtn { background-color: #ccc; color: #333; }
         #saveNoteBtn { background-color: var(--tra-orange); color: white; }
-
-        /* 媒體查詢 - 額外手機優化 */
-        @media (max-width: 480px) {
-            body { padding: 0.3rem; }
-            h1 { font-size: 1.4rem; }
-            .station-name { font-size: 1.4rem; }
-            .service-btn { padding: 0.5rem 0.7rem; font-size: 1rem; }
-            .bottom-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
-        }
+        @media (max-width: 480px) { body { padding: 0.3rem; } h1 { font-size: 1.4rem; } .station-name { font-size: 1.4rem; } .service-btn { padding: 0.5rem 0.7rem; font-size: 1rem; } .bottom-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; } }
+        .scroll-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        .scroll-btn { width: 50px; height: 50px; background-color: rgba(0, 51, 102, 0.8); color: white; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: background-color 0.2s; }
+        .scroll-btn:active { background-color: var(--tra-blue); }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>台鐵列車到開輔助工具</h1>
+        <h1>乘務人員輔助器</h1>
         <div class="input-container">
             <input type="number" id="trainNoInput" placeholder="請輸入車次編號" inputmode="numeric">
             <button id="searchBtn">查詢時刻表</button>
@@ -111,20 +79,14 @@
         <div id="controls" class="controls" style="display: none;">
              <div class="control-group">
                 <label for="simpleModeToggle">簡潔模式</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="simpleModeToggle">
-                    <span class="slider"></span>
-                </label>
+                <label class="toggle-switch"> <input type="checkbox" id="simpleModeToggle"> <span class="slider"></span> </label>
             </div>
-            <div class="control-group">
+             <div class="control-group">
                 <label for="hideDepartedToggle">隱藏已出發</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="hideDepartedToggle">
-                    <span class="slider"></span>
-                </label>
+                <label class="toggle-switch"> <input type="checkbox" id="hideDepartedToggle"> <span class="slider"></span> </label>
             </div>
-            <div class="control-group">
-                <button id="saveStateBtn">儲存到URL</button>
+             <div class="control-group">
+                <button id="saveStateBtn">產生分享連結</button>
             </div>
         </div>
         <div id="result">
@@ -134,9 +96,14 @@
     
     <div id="noteModal" class="modal-overlay"></div>
 
+    <div class="scroll-buttons">
+        <button id="scrollTopBtn" class="scroll-btn" title="回到頂部">▲</button>
+        <button id="scrollToNextBtn" class="scroll-btn" title="到下一站">▼</button>
+    </div>
+
     <script>
-        const APP_ID = '';
-        const APP_KEY = '';
+        const APP_ID = ''; // 請填入您的 TDX App ID
+        const APP_KEY = ''; // 請填入您的 TDX App Key
 
         const trainNoInput = document.getElementById('trainNoInput');
         const searchBtn = document.getElementById('searchBtn');
@@ -154,12 +121,14 @@
 
         searchBtn.addEventListener('click', fetchTimetable);
         trainNoInput.addEventListener('keyup', (event) => { if (event.key === 'Enter') fetchTimetable(); });
-        simpleModeToggle.addEventListener('change', (e) => {
-            document.querySelector('.station-list')?.classList.toggle('simple-mode', e.target.checked);
-        });
-        hideDepartedToggle.addEventListener('change', (e) => {
-            updateCountdown();
-            updateVisibility();
+        simpleModeToggle.addEventListener('change', (e) => { document.querySelector('.station-list')?.classList.toggle('simple-mode', e.target.checked); });
+        hideDepartedToggle.addEventListener('change', (e) => { updateVisibility(); });
+        document.getElementById('scrollTopBtn').addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        document.getElementById('scrollToNextBtn').addEventListener('click', () => {
+            const nextStation = document.querySelector('.countdown');
+            if (nextStation) {
+                nextStation.closest('.station-item').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         });
 
         async function fetchTimetable() {
@@ -170,9 +139,7 @@
             }
             resultDiv.innerHTML = `<p class="info-message">查詢中...</p>`;
             if (countdownInterval) clearInterval(countdownInterval);
-            stationNotes = {};
-            serviceCounts = [];
-            manualHiddenUpTo = 0;
+            stationNotes = {}; serviceCounts = []; manualHiddenUpTo = 0;
 
             const trainDate = getTodayDate();
             const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/DailyTimetable/Today/TrainNo/${trainNo}?%24format=JSON`;
@@ -184,20 +151,31 @@
                 if (!data || data.length === 0 || !data[0].StopTimes) {
                      resultDiv.innerHTML = `<p class="error-message">找不到今日 ${trainNo} 車次的時刻表資訊。</p>`;
                      controlsDiv.style.display = 'none';
-                     return;
+                     return false;
                 }
-                // 4. 初始化時就補上秒數
-                stationData = data[0].StopTimes.map(stop => ({
-                    ...stop, 
-                    ArrivalTime: stop.ArrivalTime + ':00',
-                    DepartureTime: stop.DepartureTime + ':00'
-                }));
+                
+                let lastDepartureTime = null;
+                let dayOffset = 0;
+                stationData = data[0].StopTimes.map(stop => {
+                    if (lastDepartureTime && stop.DepartureTime < lastDepartureTime) {
+                        dayOffset++;
+                    }
+                    lastDepartureTime = stop.DepartureTime;
+                    return {
+                        ...stop,
+                        ArrivalTime: stop.ArrivalTime + ':00',
+                        DepartureTime: stop.DepartureTime + ':00',
+                        dayOffset: dayOffset
+                    };
+                });
+
                 displayTimetable(stationData);
                 controlsDiv.style.display = 'flex';
-                return true; // 表示成功
+                return true;
             } catch (error) {
                 resultDiv.innerHTML = `<p class="error-message">查詢失敗: ${error.message}</p>`;
                 controlsDiv.style.display = 'none';
+                return false;
             }
         }
         
@@ -206,7 +184,7 @@
             let listHTML = `<ul class="station-list">`;
             stopTimes.forEach((stop, index) => {
                 listHTML += `
-                    <li class="station-item" id="station-item-${index}" data-index="${index}">
+                    <li class="station-item" id="station-item-${index}" data-index="${index}" data-original-departure-time="${stop.DepartureTime}">
                         <div class="top-row">
                             <div class="station-header">
                                 <span class="station-name">${stop.StationName.Zh_tw}</span>
@@ -219,10 +197,7 @@
                             </div>
                         </div>
                         <div class="bottom-row">
-                            <div class="time-group">
-                                <span class="time-label">到:</span>
-                                <span class="time-display arrival-time">${stop.ArrivalTime}</span>
-                            </div>
+                            <div class="time-group"> <span class="time-label">到:</span> <span class="time-display arrival-time">${stop.ArrivalTime}</span> </div>
                             <div class="time-group">
                                 <span class="time-label">開:</span>
                                 <button class="time-adj-btn" data-op="-1">-</button>
@@ -249,46 +224,15 @@
                     item.classList.add('highlighted-station');
                 });
             });
-
             document.querySelectorAll('.time-adj-btn').forEach(btn => btn.addEventListener('click', adjustTime));
-            
-            // 2. 修正輪視便圖示次數從 2 開始的 bug
             document.querySelectorAll('.service-btn').forEach(btn => {
-                const handlePressStart = (e) => {
-                    e.preventDefault(); // <<-- 關鍵修正：防止觸控後觸發滑鼠事件
-                    e.stopPropagation();
-                    btn.setAttribute('data-long-press', 'false');
-                    longPressTimer = setTimeout(() => {
-                        btn.setAttribute('data-long-press', 'true');
-                        clearBadge(btn);
-                    }, 500);
-                };
-                const handlePressEnd = (e) => {
-                    e.stopPropagation();
-                    clearTimeout(longPressTimer);
-                    if (btn.getAttribute('data-long-press') === 'false') {
-                        incrementBadge(btn);
-                    }
-                };
-                btn.addEventListener('mousedown', handlePressStart);
-                btn.addEventListener('mouseup', handlePressEnd);
+                const handlePressStart = (e) => { e.preventDefault(); e.stopPropagation(); btn.setAttribute('data-long-press', 'false'); longPressTimer = setTimeout(() => { btn.setAttribute('data-long-press', 'true'); clearBadge(btn); }, 500); };
+                const handlePressEnd = (e) => { e.stopPropagation(); clearTimeout(longPressTimer); if (btn.getAttribute('data-long-press') === 'false') { incrementBadge(btn); } };
+                btn.addEventListener('mousedown', handlePressStart); btn.addEventListener('mouseup', handlePressEnd);
                 btn.addEventListener('mouseleave', () => clearTimeout(longPressTimer));
-                btn.addEventListener('touchstart', handlePressStart);
-                btn.addEventListener('touchend', handlePressEnd);
+                btn.addEventListener('touchstart', handlePressStart); btn.addEventListener('touchend', handlePressEnd);
             });
-            
             document.querySelectorAll('.station-name').forEach((el, index) => el.addEventListener('click', (e) => { e.stopPropagation(); openNoteModal(index); }));
-            
-            document.querySelectorAll('.status-cell').forEach(cell => {
-                cell.addEventListener('click', (e) => {
-                    if (e.target.classList.contains('departed-circle')) {
-                        const item = e.target.closest('.station-item');
-                        const index = parseInt(item.dataset.index);
-                        manualHiddenUpTo = Math.max(manualHiddenUpTo, index + 1);
-                        updateVisibility();
-                    }
-                });
-            });
             document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
             document.getElementById('closeNoteBtn').addEventListener('click', closeModal);
             document.getElementById('noteModal').addEventListener('click', (e) => { if(e.target.id === 'noteModal') closeModal(); });
@@ -303,53 +247,41 @@
         
         function updateCountdown() {
             const now = new Date();
-            const todayStr = getTodayDate();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             let nextUpcomingStationIndex = -1;
 
             for (let i = 0; i < stationData.length; i++) {
+                const stop = stationData[i];
                 const departureTimeStr = document.getElementById(`status-${i}`)?.dataset.departureTime;
                 if (!departureTimeStr) continue;
-                const departureDateTime = new Date(`${todayStr}T${departureTimeStr}`);
-                if (departureDateTime > now) {
-                    nextUpcomingStationIndex = i;
-                    break;
-                }
+                const departureDateTime = new Date(today);
+                departureDateTime.setDate(today.getDate() + stop.dayOffset);
+                const [h, m, s] = departureTimeStr.split(':');
+                departureDateTime.setHours(h, m, s);
+                if (departureDateTime > now) { nextUpcomingStationIndex = i; break; }
             }
-
-            let autoHiddenUpTo = 0;
-            if (hideDepartedToggle.checked) {
-                autoHiddenUpTo = nextUpcomingStationIndex !== -1 ? nextUpcomingStationIndex : stationData.length;
-            }
-
-            const effectiveHiddenUpTo = Math.max(manualHiddenUpTo, autoHiddenUpTo);
 
             document.querySelectorAll('.status-cell').forEach((cell, index) => {
                 const item = document.getElementById(`station-item-${index}`);
-                if (item.style.display === 'none') {
-                    cell.innerHTML = '';
-                    return;
-                }
+                if (item.style.display === 'none') { cell.innerHTML = ''; return; }
+                const stop = stationData[index];
                 const departureTimeStr = cell.dataset.departureTime;
-                const departureDateTime = new Date(`${todayStr}T${departureTimeStr}`);
+                const departureDateTime = new Date(today);
+                departureDateTime.setDate(today.getDate() + stop.dayOffset);
+                const [h, m, s] = departureTimeStr.split(':');
+                departureDateTime.setHours(h, m, s);
                 const diffSeconds = Math.round((departureDateTime - now) / 1000);
                 if (diffSeconds > 0) {
-                    if (nextUpcomingStationIndex !== -1 && index >= nextUpcomingStationIndex && index < nextUpcomingStationIndex + 3) {
-                        cell.innerHTML = `<span class="countdown">${diffSeconds}</span>`;
-                    } else {
-                        cell.innerHTML = '';
-                    }
+                    if (index === nextUpcomingStationIndex) {
+                        cell.innerHTML = `<span class="countdown">${diffSeconds}s</span>`;
+                    } else { cell.innerHTML = ''; }
                 } else {
-                    if (!hideDepartedToggle.checked) {
-                        cell.innerHTML = `<div class="departed-circle" title="點擊隱藏上方所有站"></div>`;
-                    } else {
-                        cell.innerHTML = '';
-                    }
+                    cell.innerHTML = `<div class="departed-circle" title="已出發"></div>`;
                 }
             });
             updateVisibility();
         }
         
-        // 4. 開車時刻 +/- bug 完整修正
         function adjustTime(event) {
             event.stopPropagation();
             const btn = event.currentTarget;
@@ -357,97 +289,80 @@
             const item = btn.closest('.station-item');
             const index = item.dataset.index;
             const timeSpan = document.getElementById(`departure-time-${index}`);
-            const statusCell = document.getElementById(`status-${index}`);
             
+            const originalTimeStr = item.dataset.originalDepartureTime;
+            const [origH, origM, origS] = originalTimeStr.split(':').map(Number);
+            const originalDate = new Date(0, 0, 0, origH, origM, origS);
+            const maxDate = new Date(originalDate.getTime() + 30000);
+
             const [h, m, s] = timeSpan.textContent.split(':').map(Number);
-            const date = new Date();
-            date.setHours(h, m, s, 0); // 確保毫秒為0
-            date.setSeconds(date.getSeconds() + (op * 30));
+            const currentDate = new Date(0, 0, 0, h, m, s);
+            const newDate = new Date(currentDate.getTime() + (op * 30000));
+
+            if (newDate > maxDate || newDate < originalDate) {
+                btn.style.transform = 'scale(0.9)'; setTimeout(() => { btn.style.transform = ''; }, 100);
+                return;
+            }
             
-            const newH = String(date.getHours()).padStart(2, '0');
-            const newM = String(date.getMinutes()).padStart(2, '0');
-            const newS = String(date.getSeconds()).padStart(2, '0');
-            const newTime = `${newH}:${newM}:${newS}`;
-            
+            const newTime = `${String(newDate.getHours()).padStart(2, '0')}:${String(newDate.getMinutes()).padStart(2, '0')}:${String(newDate.getSeconds()).padStart(2, '0')}`;
             timeSpan.textContent = newTime;
-            statusCell.dataset.departureTime = newTime;
+            document.getElementById(`status-${index}`).dataset.departureTime = newTime;
             updateCountdown();
         }
 
         function updateVisibility() {
             const now = new Date();
-            const todayStr = getTodayDate();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             let nextUpcomingStationIndex = -1;
 
             for (let i = 0; i < stationData.length; i++) {
+                const stop = stationData[i];
                 const departureTimeStr = document.getElementById(`status-${i}`)?.dataset.departureTime;
                 if (!departureTimeStr) continue;
-                const departureDateTime = new Date(`${todayStr}T${departureTimeStr}`);
-                if (departureDateTime > now) {
-                    nextUpcomingStationIndex = i;
-                    break;
-                }
+                const departureDateTime = new Date(today);
+                departureDateTime.setDate(today.getDate() + stop.dayOffset);
+                const [h, m, s] = departureTimeStr.split(':');
+                departureDateTime.setHours(h, m, s);
+                if (departureDateTime > now) { nextUpcomingStationIndex = i; break; }
             }
 
-            let autoHiddenUpTo = 0;
             if (hideDepartedToggle.checked) {
-                autoHiddenUpTo = nextUpcomingStationIndex !== -1 ? nextUpcomingStationIndex : stationData.length;
+                const hiddenUpTo = nextUpcomingStationIndex !== -1 ? nextUpcomingStationIndex : stationData.length;
+                document.querySelectorAll('.station-item').forEach(item => {
+                    const idx = parseInt(item.dataset.index);
+                    item.style.display = (idx < hiddenUpTo) ? 'none' : 'block';
+                });
+            } else {
+                document.querySelectorAll('.station-item').forEach(item => {
+                    item.style.display = 'block';
+                });
             }
-
-            const effectiveHiddenUpTo = Math.max(manualHiddenUpTo, autoHiddenUpTo);
-
-            document.querySelectorAll('.station-item').forEach(item => {
-                const idx = parseInt(item.dataset.index);
-                item.style.display = (idx < effectiveHiddenUpTo) ? 'none' : '';
-            });
         }
 
         function saveState() {
             const adjustedTimes = {};
             document.querySelectorAll('.departure-time').forEach(el => {
                 const index = el.id.split('-')[2];
-                adjustedTimes[index] = el.textContent;
+                if (el.textContent !== document.getElementById(`station-item-${index}`).dataset.originalDepartureTime) {
+                    adjustedTimes[index] = el.textContent;
+                }
             });
-            const state = {
-                trainNo: trainNoInput.value.trim(),
-                notes: stationNotes,
-                times: adjustedTimes,
-                hidden: manualHiddenUpTo,
-                simple: simpleModeToggle.checked,
-                hideDeparted: hideDepartedToggle.checked,
-                services: serviceCounts
-            };
+            const state = { trainNo: trainNoInput.value.trim(), notes: stationNotes, times: adjustedTimes, simple: simpleModeToggle.checked, hideDeparted: hideDepartedToggle.checked, services: serviceCounts };
             const json = JSON.stringify(state);
             const encoded = LZString.compressToEncodedURIComponent(json);
             history.replaceState(null, '', '#' + encoded);
-            alert('設定已儲存');
+            alert('分享連結已產生並複製到網址列');
         }
 
-        // --- 輔助函數 ---
         function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
         function getAuthorizationHeader() { const gmtString = new Date().toUTCString(); const hmac = CryptoJS.HmacSHA1(`x-date: ${gmtString}`, APP_KEY); const base64Hmac = CryptoJS.enc.Base64.stringify(hmac); return { 'Authorization': `hmac username="${APP_ID}", algorithm="hmac-sha1", headers="x-date", signature="${base64Hmac}"`, 'X-Date': gmtString }; }
-        function incrementBadge(btn) { 
-            const index = parseInt(btn.dataset.index);
-            const btnIdx = parseInt(btn.dataset.btn);
-            serviceCounts[index][btnIdx]++;
-            const badge = btn.querySelector('.badge'); 
-            badge.textContent = serviceCounts[index][btnIdx]; 
-            badge.classList.add('visible'); 
-        }
-        function clearBadge(btn) { 
-            const index = parseInt(btn.dataset.index);
-            const btnIdx = parseInt(btn.dataset.btn);
-            serviceCounts[index][btnIdx] = 0;
-            const badge = btn.querySelector('.badge'); 
-            badge.textContent = ''; 
-            badge.classList.remove('visible'); 
-        }
+        function incrementBadge(btn) { const index = parseInt(btn.dataset.index); const btnIdx = parseInt(btn.dataset.btn); serviceCounts[index][btnIdx]++; const badge = btn.querySelector('.badge'); badge.textContent = serviceCounts[index][btnIdx]; badge.classList.add('visible'); }
+        function clearBadge(btn) { const index = parseInt(btn.dataset.index); const btnIdx = parseInt(btn.dataset.btn); serviceCounts[index][btnIdx] = 0; const badge = btn.querySelector('.badge'); badge.textContent = ''; badge.classList.remove('visible'); }
         let currentEditingIndex = null;
         function openNoteModal(index) { currentEditingIndex = index; const stationName = stationData[index].StationName.Zh_tw; document.getElementById('modalStationName').textContent = `新增/編輯 ${stationName} 站備註`; document.getElementById('noteTextarea').value = stationNotes[index] || ''; document.getElementById('noteModal').classList.add('visible'); document.getElementById('noteTextarea').focus(); }
         function closeModal() { document.getElementById('noteModal').classList.remove('visible'); currentEditingIndex = null; }
         function saveNote() { if (currentEditingIndex !== null) { stationNotes[currentEditingIndex] = document.getElementById('noteTextarea').value.trim(); const stationNameEl = document.querySelector(`#station-item-${currentEditingIndex} .station-name`); stationNameEl.classList.toggle('has-note', !!stationNotes[currentEditingIndex]); } closeModal(); }
 
-        // 載入狀態從 hash
         function loadStateFromHash() {
             if (window.location.hash) {
                 try {
@@ -459,40 +374,17 @@
                     hideDepartedToggle.checked = state.hideDeparted;
                     fetchTimetable().then(success => {
                         if (success) {
-                            stationNotes = state.notes || {};
-                            serviceCounts = state.services || stationData.map(() => [0,0,0]);
-                            manualHiddenUpTo = state.hidden || 0;
-                            Object.entries(state.times || {}).forEach(([index, time]) => {
-                                const timeEl = document.getElementById(`departure-time-${index}`);
-                                if (timeEl) timeEl.textContent = time;
-                                const statusEl = document.getElementById(`status-${index}`);
-                                if (statusEl) statusEl.dataset.departureTime = time;
-                            });
-                            Object.keys(stationNotes).forEach(index => {
-                                const nameEl = document.querySelector(`#station-item-${index} .station-name`);
-                                if (nameEl) nameEl.classList.add('has-note');
-                            });
-                            serviceCounts.forEach((counts, index) => {
-                                const btns = document.querySelectorAll(`.service-btn[data-index="${index}"]`);
-                                counts.forEach((count, btnIdx) => {
-                                    if (count > 0) {
-                                        const badge = btns[btnIdx].querySelector('.badge');
-                                        badge.textContent = count;
-                                        badge.classList.add('visible');
-                                    }
-                                });
-                            });
+                            stationNotes = state.notes || {}; serviceCounts = state.services || stationData.map(() => [0,0,0]);
+                            Object.entries(state.times || {}).forEach(([index, time]) => { const timeEl = document.getElementById(`departure-time-${index}`); if (timeEl) { timeEl.textContent = time; document.getElementById(`status-${index}`).dataset.departureTime = time; } });
+                            Object.keys(stationNotes).forEach(index => { const nameEl = document.querySelector(`#station-item-${index} .station-name`); if (nameEl && stationNotes[index]) nameEl.classList.add('has-note'); });
+                            serviceCounts.forEach((counts, index) => { const btns = document.querySelectorAll(`.service-btn[data-index="${index}"]`); counts.forEach((count, btnIdx) => { if (count > 0) { const badge = btns[btnIdx].querySelector('.badge'); badge.textContent = count; badge.classList.add('visible'); } }); });
                             document.querySelector('.station-list')?.classList.toggle('simple-mode', simpleModeToggle.checked);
                             updateCountdown();
-                            updateVisibility();
                         }
                     });
-                } catch (e) {
-                    console.error('無法載入狀態:', e);
-                }
+                } catch (e) { console.error('無法載入狀態:', e); }
             }
         }
-
         window.addEventListener('load', loadStateFromHash);
     </script>
 </body>
