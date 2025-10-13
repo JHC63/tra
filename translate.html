@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>多語言同步翻譯｜英文・日文・韓文・泰文・印尼文・越南文</title>
+  <meta name="description" content="將輸入文字同時翻譯為六種語言：英文、日文、韓文、泰文、印尼文、越南文" />
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --elev: #121417;
+      --text: #e6e8eb;
+      --muted: #99a1a8;
+      --border: #2a2f35;
+      --primary: #4f7cff;
+      --primary-600: #3b63d9;
+      --ok: #00c853;
+      --warn: #ffb300;
+      --err: #ff5252;
+      --card: #101317;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f7f8fa;
+        --elev: #ffffff;
+        --text: #1f2328;
+        --muted: #5b646f;
+        --border: #e4e7eb;
+        --primary: #3556e8;
+        --primary-600: #2447e0;
+        --ok: #0aa85a;
+        --warn: #c48200;
+        --err: #d93025;
+        --card: #ffffff;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1200px 600px at 20% -10%, #1a2345 0%, rgba(26,35,69,0) 60%),
+                  radial-gradient(1200px 600px at 80% -10%, #1a3945 0%, rgba(26,57,69,0) 60%),
+                  var(--bg);
+      color: var(--text);
+      font: 14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, 'PingFang TC', 'Microsoft JhengHei', Arial, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 20px;
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+    .muted { color: var(--muted); }
+    .panel {
+      background: color-mix(in oklab, var(--elev) 80%, transparent);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      resize: vertical;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--elev);
+      color: var(--text);
+      outline: none;
+      transition: border-color .15s ease;
+    }
+    textarea:focus { border-color: var(--primary); }
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--elev);
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background .15s ease, border-color .15s ease, transform .02s ease;
+    }
+    button.primary { background: var(--primary); border-color: var(--primary-600); color: #fff; }
+    button:active { transform: translateY(1px); }
+    .hint { font-size: 12px; color: var(--muted); }
+
+    .grid {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      min-height: 160px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .card-title { font-weight: 600; }
+    .output {
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+      flex: 1;
+    }
+    .status { font-size: 12px; color: var(--muted); margin-top: 6px; }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid color-mix(in oklab, var(--text) 20%, transparent);
+      border-top-color: var(--text);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: -3px;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .grow { flex: 1; }
+    .right { text-align: right; }
+
+    .error { color: var(--err); }
+    .ok { color: var(--ok); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>多語言同步翻譯</h1>
+        <div class="muted">一次輸出：英文・日文・韓文・泰文・印尼文・越南文</div>
+      </div>
+    </header>
+
+    <section class="panel" aria-label="輸入與操作">
+      <div class="input-row">
+        <textarea id="sourceText" placeholder="在此貼上或輸入要翻譯的文字…"></textarea>
+        <div class="controls">
+          <button id="translateBtn" class="primary">開始翻譯</button>
+          <button id="clearBtn">清除</button>
+          <div class="hint">快捷鍵：Ctrl/⌘ + Enter</div>
+          <div class="grow"></div>
+          <div id="globalStatus" class="hint"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="翻譯結果">
+      <div class="card" data-target="en">
+        <div class="card-header">
+          <div class="card-title">英文</div>
+          <div class="row">
+            <button class="copyBtn" data-target="en" title="複製">複製</button>
+          </div>
+        </div>
+        <div class="output" id="out-en"></div>
+        <div class="status" id="st-en"></div>
+      </div>
+      <div class="card" data-target="ja">
+        <div class="card-header">
+          <div class="card-title">日文</div>
+          <div class="row">
+            <button class="copyBtn" data-target="ja" title="複製">複製</button>
+          </div>
+        </div>
+        <div class="output" id="out-ja"></div>
+        <div class="status" id="st-ja"></div>
+      </div>
+      <div class="card" data-target="ko">
+        <div class="card-header">
+          <div class="card-title">韓文</div>
+          <div class="row">
+            <button class="copyBtn" data-target="ko" title="複製">複製</button>
+          </div>
+        </div>
+        <div class="output" id="out-ko"></div>
+        <div class="status" id="st-ko"></div>
+      </div>
+      <div class="card" data-target="th">
+        <div class="card-header">
+          <div class="card-title">泰文</div>
+          <div class="row">
+            <button class="copyBtn" data-target="th" title="複製">複製</button>
+          </div>
+        </div>
+        <div class="output" id="out-th"></div>
+        <div class="status" id="st-th"></div>
+      </div>
+      <div class="card" data-target="id">
+        <div class="card-header">
+          <div class="card-title">印尼文</div>
+          <div class="row">
+            <button class="copyBtn" data-target="id" title="複製">複製</button>
+          </div>
+        </div>
+        <div class="output" id="out-id"></div>
+        <div class="status" id="st-id"></div>
+      </div>
+      <div class="card" data-target="vi">
+        <div class="card-header">
+          <div class="card-title">越南文</div>
+          <div class="row">
+            <button class="copyBtn" data-target="vi" title="複製">複製</button>
+          </div>
+        </div>
+        <div class="output" id="out-vi"></div>
+        <div class="status" id="st-vi"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const targets = [
+      { code: 'en', name: '英文' },
+      { code: 'ja', name: '日文' },
+      { code: 'ko', name: '韓文' },
+      { code: 'th', name: '泰文' },
+      { code: 'id', name: '印尼文' },
+      { code: 'vi', name: '越南文' },
+    ];
+
+    const sourceEl = document.getElementById('sourceText');
+    const translateBtn = document.getElementById('translateBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const globalStatus = document.getElementById('globalStatus');
+
+    function setCardLoading(code) {
+      const st = document.getElementById(`st-${code}`);
+      const out = document.getElementById(`out-${code}`);
+      out.textContent = '';
+      st.innerHTML = `<span class="spinner"></span>翻譯中…`;
+      st.classList.remove('error', 'ok');
+    }
+    function setCardOk(code, text) {
+      const st = document.getElementById(`st-${code}`);
+      const out = document.getElementById(`out-${code}`);
+      out.textContent = text || '';
+      st.textContent = '完成';
+      st.classList.remove('error');
+      st.classList.add('ok');
+    }
+    function setCardError(code, msg) {
+      const st = document.getElementById(`st-${code}`);
+      const out = document.getElementById(`out-${code}`);
+      if (!out.textContent) out.textContent = '';
+      st.textContent = msg || '發生錯誤';
+      st.classList.remove('ok');
+      st.classList.add('error');
+    }
+
+    async function translateViaLibre(text, target) {
+      const res = await fetch('https://libretranslate.de/translate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: text, source: 'auto', target, format: 'text' }),
+      });
+      if (!res.ok) {
+        throw new Error(`LibreTranslate ${res.status}`);
+      }
+      const data = await res.json();
+      if (data && typeof data.translatedText === 'string') {
+        return data.translatedText;
+      }
+      throw new Error('LibreTranslate 回傳格式不正確');
+    }
+
+    async function translateViaMyMemory(text, target) {
+      const url = new URL('https://api.mymemory.translated.net/get');
+      url.searchParams.set('q', text);
+      url.searchParams.set('langpair', `auto|${target}`);
+      const res = await fetch(url.toString(), { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) {
+        throw new Error(`MyMemory ${res.status}`);
+      }
+      const data = await res.json();
+      const candidate = data?.responseData?.translatedText;
+      if (candidate && typeof candidate === 'string') return candidate;
+      throw new Error('MyMemory 回傳格式不正確');
+    }
+
+    async function translateWithFallback(text, target) {
+      try {
+        return await translateViaLibre(text, target);
+      } catch (e) {
+        // Fallback to MyMemory for resilience
+        try {
+          return await translateViaMyMemory(text, target);
+        } catch (e2) {
+          // rethrow the first error contextually augmented
+          throw new Error(`服務不可用（${target}）`);
+        }
+      }
+    }
+
+    async function translateAll() {
+      const text = sourceEl.value.trim();
+      if (!text) {
+        globalStatus.textContent = '請先輸入文字';
+        return;
+      }
+      globalStatus.innerHTML = `<span class="spinner"></span>執行中…`;
+      targets.forEach(t => setCardLoading(t.code));
+
+      const tasks = targets.map(t => translateWithFallback(text, t.code)
+        .then(result => ({ code: t.code, ok: true, result }))
+        .catch(err => ({ code: t.code, ok: false, error: err?.message || '錯誤' }))
+      );
+
+      const results = await Promise.allSettled(tasks);
+      let success = 0, failure = 0;
+      for (const r of results) {
+        if (r.status === 'fulfilled') {
+          const { code, ok, result, error } = r.value;
+          if (ok) { setCardOk(code, result); success++; }
+          else { setCardError(code, error); failure++; }
+        } else {
+          // Should not happen because inner promise resolves, but handle anyway
+          failure++;
+        }
+      }
+
+      if (failure === 0) {
+        globalStatus.textContent = '全部完成';
+      } else if (success === 0) {
+        globalStatus.textContent = '全部失敗，可能被服務端阻擋（CORS/流量限制），請稍後重試';
+      } else {
+        globalStatus.textContent = `完成 ${success} 項，失敗 ${failure} 項`;
+      }
+    }
+
+    translateBtn.addEventListener('click', translateAll);
+    clearBtn.addEventListener('click', () => {
+      sourceEl.value = '';
+      globalStatus.textContent = '';
+      targets.forEach(t => { document.getElementById(`out-${t.code}`).textContent = ''; document.getElementById(`st-${t.code}`).textContent = ''; });
+      sourceEl.focus();
+    });
+    sourceEl.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        translateAll();
+      }
+    });
+
+    // Copy buttons
+    document.querySelectorAll('.copyBtn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const code = e.currentTarget.getAttribute('data-target');
+        const text = document.getElementById(`out-${code}`).textContent || '';
+        try {
+          await navigator.clipboard.writeText(text);
+          const st = document.getElementById(`st-${code}`);
+          const old = st.textContent;
+          st.textContent = '已複製到剪貼簿';
+          setTimeout(() => { st.textContent = old || '完成'; }, 1200);
+        } catch (err) {
+          setCardError(code, '無法存取剪貼簿');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
