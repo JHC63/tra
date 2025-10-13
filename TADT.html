@@ -62,6 +62,10 @@
         .modal-actions button { padding: 0.8rem 1.5rem; font-size: 1.2rem; border: none; border-radius: 5px; cursor: pointer; }
         #closeNoteBtn { background-color: #ccc; color: #333; }
         #saveNoteBtn { background-color: var(--tra-orange); color: white; }
+        .station-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; max-height: 70vh; overflow: auto; }
+        .station-buttons button { padding: 0.6rem 0.8rem; border: 1px solid #ccc; background: #f2f2f2; border-radius: 6px; cursor: pointer; }
+        .handover-list { max-height: 70vh; overflow: auto; margin: 0; padding-left: 1rem; }
+        .handover-list li { padding: 0.4rem 0; border-bottom: 1px solid #eee; }
         @media (max-width: 480px) { body { padding: 0.3rem; } h1 { font-size: 1.4rem; } .station-name { font-size: 1.4rem; } .service-btn { padding: 0.5rem 0.7rem; font-size: 1rem; } .bottom-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; } }
         .scroll-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
         .scroll-btn { width: 50px; height: 50px; background-color: rgba(0, 51, 102, 0.8); color: white; border: none; border-radius: 50%; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: background-color 0.2s; }
@@ -86,7 +90,7 @@
                 <label class="toggle-switch"> <input type="checkbox" id="hideDepartedToggle"> <span class="slider"></span> </label>
             </div>
              <div class="control-group">
-                <button id="saveStateBtn">儲存</button>
+                <button id="handoverBtn">交班</button>
             </div>
         </div>
         <div id="result">
@@ -95,9 +99,12 @@
     </div>
     
     <div id="noteModal" class="modal-overlay"></div>
+    <div id="stationSelectorModal" class="modal-overlay"></div>
+    <div id="handoverModal" class="modal-overlay"></div>
 
     <div class="scroll-buttons">
         <button id="scrollTopBtn" class="scroll-btn" title="回到頂部">🔺</button>
+        <button id="openStationSelectorBtn" class="scroll-btn" title="選擇停靠站">☝️</button>
         <button id="scrollToNextBtn" class="scroll-btn" title="到下一站">🔻</button>
     </div>
 
@@ -118,12 +125,14 @@
         let serviceCounts = [];
         let longPressTimer;
         let manualHiddenUpTo = 0;
+        let autoSaveInterval;
 
         searchBtn.addEventListener('click', fetchTimetable);
         trainNoInput.addEventListener('keyup', (event) => { if (event.key === 'Enter') fetchTimetable(); });
         simpleModeToggle.addEventListener('change', (e) => { document.querySelector('.station-list')?.classList.toggle('simple-mode', e.target.checked); saveToLocal(); });
         hideDepartedToggle.addEventListener('change', (e) => { updateVisibility(); saveToLocal(); });
         document.getElementById('scrollTopBtn').addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        document.getElementById('openStationSelectorBtn').addEventListener('click', openStationSelectorModal);
         document.getElementById('scrollToNextBtn').addEventListener('click', () => {
             const nextStation = document.querySelector('.countdown');
             if (nextStation) {
@@ -171,6 +180,7 @@
 
                 displayTimetable(stationData);
                 controlsDiv.style.display = 'flex';
+                startAutoSave();
                 saveToLocal();
                 return true;
             } catch (error) {
@@ -237,7 +247,7 @@
             document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
             document.getElementById('closeNoteBtn').addEventListener('click', closeModal);
             document.getElementById('noteModal').addEventListener('click', (e) => { if(e.target.id === 'noteModal') closeModal(); });
-            document.getElementById('saveStateBtn').addEventListener('click', saveState);
+            document.getElementById('handoverBtn').addEventListener('click', openHandoverModal);
         }
         
         function startCountdown() {
@@ -246,6 +256,11 @@
             countdownInterval = setInterval(updateCountdown, 1000);
         }
         
+        function startAutoSave() {
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+            autoSaveInterval = setInterval(saveState, 10000);
+        }
+
         function updateCountdown() {
             const now = new Date();
             const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -353,7 +368,6 @@
             const json = JSON.stringify(state);
             const encoded = LZString.compressToEncodedURIComponent(json);
             history.replaceState(null, '', '#' + encoded);
-            alert('儲存完畢');
             saveToLocal();
         }
 
@@ -377,6 +391,50 @@
             const state = { trainNo: trainNoInput.value.trim(), notes: stationNotes, times: adjustedTimes, simple: simpleModeToggle.checked, hideDeparted: hideDepartedToggle.checked, services: serviceCounts };
             localStorage.setItem('trainAssistantState', JSON.stringify(state));
         }
+
+        // Station selector modal
+        function openStationSelectorModal() {
+            if (!stationData || stationData.length === 0) return;
+            const modal = document.getElementById('stationSelectorModal');
+            const buttonsHtml = stationData.map((stop, index) => `<button data-index="${index}">${stop.StationName.Zh_tw}</button>`).join('');
+            modal.innerHTML = `<div class="modal-content"><h3>選擇停靠站</h3><div class="station-buttons">${buttonsHtml}</div><div class="modal-actions"><button id="closeStationSelectorBtn">關閉</button></div></div>`;
+            modal.classList.add('visible');
+            modal.querySelectorAll('.station-buttons button').forEach(btn => btn.addEventListener('click', (e) => {
+                const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+                const target = document.getElementById(`station-item-${idx}`);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                closeStationSelectorModal();
+            }));
+            document.getElementById('closeStationSelectorBtn').addEventListener('click', closeStationSelectorModal);
+            modal.addEventListener('click', (e) => { if (e.target.id === 'stationSelectorModal') closeStationSelectorModal(); });
+        }
+        function closeStationSelectorModal() {
+            document.getElementById('stationSelectorModal').classList.remove('visible');
+        }
+
+        // Handover modal
+        function openHandoverModal() {
+            if (!stationData || stationData.length === 0) return;
+            const labelMap = ['輪椅', '障視', '不便'];
+            const serviceOrder = [2, 1, 0];
+            const lines = [];
+            stationData.forEach((stop, index) => {
+                const counts = serviceCounts[index] || [0,0,0];
+                serviceOrder.forEach((typeIdx) => {
+                    const count = counts[typeIdx] || 0;
+                    if (count > 0) {
+                        lines.push(`${stop.StationName.Zh_tw}${labelMap[typeIdx]}${count}`);
+                    }
+                });
+            });
+            const listHtml = lines.length > 0 ? `<ul class="handover-list">${lines.map(line => `<li>${line}</li>`).join('')}</ul>` : `<p class="info-message">目前無紀錄</p>`;
+            const modal = document.getElementById('handoverModal');
+            modal.innerHTML = `<div class="modal-content"><h3>交班紀錄</h3>${listHtml}<div class="modal-actions"><button id="closeHandoverBtn">關閉</button></div></div>`;
+            modal.classList.add('visible');
+            document.getElementById('closeHandoverBtn').addEventListener('click', closeHandoverModal);
+            modal.addEventListener('click', (e) => { if (e.target.id === 'handoverModal') closeHandoverModal(); });
+        }
+        function closeHandoverModal() { document.getElementById('handoverModal').classList.remove('visible'); }
 
         function loadStateFromHash() {
             if (window.location.hash) {
