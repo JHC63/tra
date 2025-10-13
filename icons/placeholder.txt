@@ -1,0 +1,5 @@
+Add your icons here:
+- icon-192.png (192x192 PNG)
+- icon-512.png (512x512 PNG)
+- maskable-192.png (192x192, safe padding)
+- maskable-512.png (512x512, safe padding)

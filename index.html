@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>乘務人員輔助器 - 首頁</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="theme-color" content="#003366">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 0; padding: 16px; background: #f4f7f6; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    h1 { margin-top: 0; color: #003366; }
+    ul { list-style: none; padding: 0; }
+    li { margin: 12px 0; }
+    a { text-decoration: none; color: #007bff; font-size: 18px; }
+    a:hover { text-decoration: underline; }
+    .hint { color: #555; }
+    .install-hint { margin-top: 16px; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>乘務人員輔助器</h1>
+    <p class="hint">選擇要開啟的工具：</p>
+    <ul>
+      <li><a href="./TADT.html">時刻查詢與倒數（乘務人員輔助器）</a></li>
+      <li><a href="./NRSeat.html">自由座座位表</a></li>
+      <li><a href="./newcarriageqr.html">編組 QR Code 生成器</a></li>
+    </ul>
+
+    <div class="install-hint">
+      <p>若要安裝為 PWA：在瀏覽器選單中選擇「加入主畫面」或「安裝應用程式」。</p>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
+      });
+    }
+  </script>
+</body>
+</html>
