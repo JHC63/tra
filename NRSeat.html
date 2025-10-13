@@ -332,19 +332,35 @@
           button { padding: 8px 15px; font-size: var(--font-size-button); margin: 3px; }
           table { min-width: unset; width: 100%; }
           th, td { height: var(--seat-table-cell-height); }
-          td.seat-number-cell { width: 35px; font-size: var(--font-size-large); }
-          td.station-select-cell { width: 80px; min-width: 60px; max-width: 100px; }
-          .station-label { font-size: calc(var(--font-size-base) + 2px); }
+          td.seat-number-cell { width: 25px; font-size: 16px; }
+          td.station-select-cell { width: 60px; min-width: 50px; max-width: 70px; }
+          .station-label { font-size: var(--font-size-base); }
           .header, .footer { font-size: var(--font-size-large); }
+          .aisle, .empty { width: 5px; }
           .modal-content { width: 90%; margin: 25% auto; }
           .car-chart-container { margin-bottom: 60px; padding-bottom: 20px; border-bottom: 2px solid #eee; }
           td.station-select-cell { border: 2px dashed #007bff; border-radius: 5px; background-color: #f8f9fa; }
           
           .quick-import-buttons { display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 8px; }
           .quick-import-buttons button { flex: none; max-width: none; width: 100%; margin: 0; }
-          /* 需求 2: 座位表頁面在行動裝置上，車站按鈕字體放大 */
+          
+          /* Apply the same styling to station filter buttons as modal station buttons */
+          #global-station-buttons.quick-import-buttons {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 8px;
+              margin-top: 0;
+              padding: 0;
+          }
+          
           #global-station-buttons.quick-import-buttons button {
-              font-size: calc(var(--font-size-button) + 4px); /* 放大 4px */
+              flex: none;
+              margin: 0;
+              padding: 12px 5px;
+              font-size: calc(var(--font-size-button) + 2px);
+              border: 1px solid #ccc;
+              border-radius: 5px;
+              width: 100%;
           }
 
           .desktop-actions { display: none; }
@@ -422,11 +438,11 @@
         </div>
         <h1>設置自由座車廂</h1>
         <div class="input-group">
-          <label for="num-cars">自由座車廂數：</label>
+          <label for="num-cars">車廂數量：</label>
           <input type="number" id="num-cars" value="1" min="1">
         </div>
         <div class="input-group">
-          <label for="start-car">自由座開始車廂：</label>
+          <label for="start-car">起始車廂：</label>
           <input type="number" id="start-car" value="9" min="1">
         </div>
         <h2>手動輸入停靠站(可空白)</h2>
@@ -510,15 +526,15 @@
           '110次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
           '111次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "桃園", "臺中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"] },
           '116次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "臺中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
-          '117次': { numCars: 3, startCar: 9, stations: ["基隆", "八堵", "七堵", "汐止", "南港", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "苗栗", "豐原", "臺中", "彰化", "員林", "斗六", "民雄", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
-          '119次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化"] },
+          '117次': { numCars: 3, startCar: 9, stations: ["基隆", "八堵", "七堵", "汐止", "南港", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "苗栗", "豐原", "臺中", "彰化", "員林", "斗六", "民雄", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "屏東", "潮州"] },
+          '119次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
           '120次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
           '127次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
           '131次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "新竹", "臺中", "彰化", "嘉義", "臺南", "高雄", "屏東", "潮州"] },
           '132次': { numCars: 1, startCar: 9, stations: ["枋寮", "潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "新竹", "板橋", "臺北", "松山", "南港", "七堵"] },
           '133次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "大肚", "彰化", "員林", "斗六", "嘉義", "新營", "善化", "臺南", "新左營", "高雄", "鳳山", "屏東", "潮州"] },
           '143次': { numCars: 1, startCar: 9, stations: ["七堵", "汐止", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化", "嘉義", "臺南", "高雄", "鳳山", "屏東", "潮州"] },
-          '145次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
+          '145次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化", "員林", "斗六", "嘉義", "新營", "善化", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
           '146次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
           '148次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
           '154次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "臺中", "桃園", "板橋", "臺北", "松山", "南港"] },
