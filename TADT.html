@@ -107,7 +107,7 @@
 
     <div class="scroll-buttons">
         <button id="scrollTopBtn" class="scroll-btn" title="回到頂部">頂</button>
-        <button id="openFavoritesBtn" class="scroll-btn" title="我的最愛">❤️</button>
+        <button id="openFavoritesBtn" class="scroll-btn" title="愛心旅客">❤️</button>
         <button id="scrollToNextBtn" class="scroll-btn" title="到下一站">倒</button>
     </div>
 
@@ -546,8 +546,11 @@
         function openFavoritesModal() {
             if (!stationData || stationData.length === 0) return;
             const modal = document.getElementById('favoritesModal');
-            const [start, end] = computeRangeBounds();
-            const title = '選擇最愛站點';
+            let start = (typeof rangeStartIndex === 'number') ? rangeStartIndex : 0;
+            let end = stationData.length - 1;
+            start = Math.max(0, Math.min(start, stationData.length - 1));
+            end = Math.max(0, Math.min(end, stationData.length - 1));
+            const title = '愛心旅客下車站';
             let listHtml = '<div class="modal-content">';
             listHtml += `<h3 class="modal-title">${title}</h3>`;
             listHtml += '<div class="modal-station-list">';
