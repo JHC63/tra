@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>乘務人員時刻表</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
+    <style>
+        :root {
+            --tra-blue: #003366; --tra-orange: #ff7f00; --highlight-blue: #007bff;
+            --success-green: #5cb85c; --danger-red: #d9534f; --light-gray: #f4f7f6;
+            --border-color: #ddd;
+        }
+        
+        /* Added dark mode CSS variables */
+        body.dark-mode {
+            --tra-blue: #4a90e2;
+            --tra-orange: #ff9933;
+            --highlight-blue: #66b3ff;
+            --success-green: #7ed97e;
+            --danger-red: #ff6b6b;
+            --light-gray: #1a1a1a;
+            --border-color: #444;
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0; padding: 0.5rem; background-color: var(--light-gray);
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        /* Dark mode body styles */
+        body.dark-mode {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+        }
+        
+        .container { max-width: 100%; margin: 0 auto; background-color: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+        
+        /* Dark mode container */
+        body.dark-mode .container {
+            background-color: var(--bg-secondary);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 { color: var(--tra-blue); text-align: center; margin-top: 0; margin-bottom: 1rem; font-size: 1.6rem; }
+        .input-container { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+        #trainNoInput { width: 100%; box-sizing: border-box; padding: 1rem; font-size: 1.4rem; border: 1px solid var(--border-color); border-radius: 5px; text-align: center; }
+        
+        /* Dark mode input */
+        body.dark-mode #trainNoInput {
+            background-color: #333;
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        
+        #searchBtn { width: 100%; box-sizing: border-box; padding: 1rem 1.5rem; font-size: 1.4rem; background-color: var(--tra-orange); color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease; touch-action: manipulation; }
+        #searchBtn:hover, #searchBtn:active { background-color: #e67300; }
+        .controls { display: flex; flex-direction: column; gap: 0.8rem; align-items: flex-start; margin-bottom: 1rem; padding: 0.5rem; background-color: #f9f9f9; border-radius: 4px; }
+        
+        /* Dark mode controls */
+        body.dark-mode .controls {
+            background-color: #252525;
+        }
+        
+        .control-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; }
+        
+        /* Increased label font size to 1.2rem */
+        .control-item label {
+            font-size: 1.2rem;
+        }
+        
+        /* Added font-size for .label class inside .control-item to fix "範圍：" text size */
+        .control-item .label {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle-switch input { display: none; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--tra-blue); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        #result { margin-top: 0.5rem; }
+        .info-message, .error-message { text-align: center; padding: 1.5rem 0; font-size: 1.1rem; }
+        .error-message { color: var(--danger-red); background-color: #f2dede; border: 1px solid #ebccd1; border-radius: 4px; padding: 1rem; }
+        
+        /* Dark mode error message */
+        body.dark-mode .error-message {
+            background-color: #3d2020;
+            border-color: #5a2a2a;
+        }
+        
+        .station-list { list-style-type: none; padding: 0; margin: 0; }
+        
+        /* Optimized station-item for smartwatch: larger padding, more prominent layout */
+        .station-item { 
+            border: 2px solid transparent; 
+            border-radius: 6px; 
+            padding: 1.5rem 1rem; 
+            margin-bottom: 1.2rem; 
+            background-color: #fdfdfd; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.12); 
+            transition: all 0.2s; 
+        }
+        
+        /* Dark mode station item */
+        body.dark-mode .station-item {
+            background-color: #2a2a2a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .station-item.highlighted-station { border-color: var(--highlight-blue); }
+        .station-list.simple-mode .bottom-row { display: none; }
+        .top-row, .bottom-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+        .top-row { margin-bottom: 0.8rem; }
+        
+        /* Optimized station-header for smartwatch: vertical layout for better space usage */
+        .station-header { 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            gap: 1rem;
+        }
+        
+        /* Increased station name size significantly for smartwatch visibility */
+        .station-name { 
+            font-weight: bold; 
+            font-size: 2.4rem; 
+            text-align: center;
+            width: 100%;
+            line-height: 1.2;
+        }
+        
+        /* Centered status cell and increased size for smartwatch */
+        .status-cell { 
+            min-width: auto;
+            width: 100%;
+            text-align: center; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Dramatically increased countdown size for smartwatch - this is the most critical info */
+        .countdown { 
+            color: var(--danger-red); 
+            font-weight: bold; 
+            font-size: 3rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(217, 83, 79, 0.1);
+            border-radius: 8px;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        /* Increased departed circle size significantly for smartwatch visibility */
+        .departed-circle { 
+            display: inline-block; 
+            width: 60px; 
+            height: 60px; 
+            background-color: var(--success-green); 
+            border-radius: 50%; 
+            cursor: default;
+            box-shadow: 0 2px 8px rgba(92, 184, 92, 0.4);
+        }
+        
+        .bottom-row { background-color: #f7f7f7; padding: 0.8rem; border-radius: 4px; flex-direction: row; justify-content: space-between; }
+        
+        /* Dark mode bottom row */
+        body.dark-mode .bottom-row {
+            background-color: #1f1f1f;
+        }
+        
+        .time-group { display: flex; align-items: center; gap: 0.5rem; }
+        
+        /* Increased time label size for smartwatch */
+        .time-label { 
+            color: #555; 
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        /* Dark mode time label */
+        body.dark-mode .time-label {
+            color: #aaa;
+        }
+        
+        /* Increased time display size for smartwatch */
+        .time-display { 
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        /* Unified button styles for modal and control buttons */
+        .time-adj-btn,
+        #rangeStartBtn,
+        #rangeEndBtn,
+        #openGlobalNoteBtn,
+        #closeNoteBtn,
+        #saveNoteBtn,
+        #closeStationPickerBtn,
+        #clearRangeBtn,
+        #closeFavoritesBtn,
+        #closeGlobalNoteBtn,
+        #saveGlobalNoteBtn {
+            background: #e9e9e9;
+            border: 1px solid #ccc;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            touch-action: manipulation;
+            transition: background-color 0.2s;
+        }
+        
+        /* Increased time adjustment button size for easier smartwatch interaction */
+        .time-adj-btn {
+            width: 45px;
+            height: 45px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        
+        /* Dark mode button styles */
+        body.dark-mode .time-adj-btn,
+        body.dark-mode #rangeStartBtn,
+        body.dark-mode #rangeEndBtn,
+        body.dark-mode #openGlobalNoteBtn,
+        body.dark-mode #closeNoteBtn,
+        body.dark-mode #closeStationPickerBtn,
+        body.dark-mode #clearRangeBtn,
+        body.dark-mode #closeFavoritesBtn,
+        body.dark-mode #closeGlobalNoteBtn {
+            background: #3a3a3a;
+            border-color: #555;
+            color: var(--text-primary);
+        }
+        
+        body.dark-mode #saveNoteBtn,
+        body.dark-mode #saveGlobalNoteBtn {
+            background-color: var(--tra-orange);
+            color: white;
+            border-color: var(--tra-orange);
+        }
+        
+        .time-adj-btn:hover,
+        #rangeStartBtn:hover,
+        #rangeEndBtn:hover,
+        #openGlobalNoteBtn:hover {
+            background-color: #d9d9d9;
+        }
+        
+        body.dark-mode .time-adj-btn:hover,
+        body.dark-mode #rangeStartBtn:hover,
+        body.dark-mode #rangeEndBtn:hover,
+        body.dark-mode #openGlobalNoteBtn:hover {
+            background-color: #4a4a4a;
+        }
+        
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; z-index: 1000; }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 95%; max-width: none; }
+        
+        /* Dark mode modal */
+        body.dark-mode .modal-content {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        body.dark-mode #noteTextarea,
+        body.dark-mode #globalNoteTextarea {
+            background-color: #333;
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        
+        .modal-actions { display: flex; justify-content: space-between; margin-top: 1rem; }
+        .modal-actions button { padding: 0.8rem 1.5rem; font-size: 1.2rem; border: none; border-radius: 5px; cursor: pointer; }
+        .modal-title { margin-top: 0; }
+        .modal-station-list { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; max-height: 50vh; overflow: auto; }
+        .modal-station-list button { padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #f7f7f7; font-size: 1rem; }
+        .modal-station-list button.is-favorite { border-color: #ff6b81; background: #fff0f3; }
+        
+        /* Dark mode modal station list */
+        body.dark-mode .modal-station-list button {
+            background: #3a3a3a;
+            border-color: #555;
+            color: var(--text-primary);
+        }
+        
+        body.dark-mode .modal-station-list button.is-favorite {
+            border-color: #ff6b81;
+            background: #3d2020;
+        }
+        
+        .control-inline { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+        .control-inline .label { font-weight: 600; color: #333; font-size: 1.2rem; }
+        
+        /* Dark mode control inline label */
+        body.dark-mode .label,
+        body.dark-mode .control-inline .label {
+            color: var(--text-primary);
+        }
+        
+        /* Smartwatch-specific media query for very small screens */
+        @media (max-width: 480px) { 
+            body { padding: 0.3rem; } 
+            h1 { font-size: 1.4rem; } 
+            .station-name { font-size: 2.2rem; }
+            .countdown { font-size: 2.5rem; }
+            .departed-circle { width: 50px; height: 50px; }
+            .bottom-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .time-display { font-size: 1.3rem; }
+            .time-label { font-size: 1.1rem; }
+        }
+        
+        /* Added extra small screen optimization for smartwatches (< 300px width) */
+        @media (max-width: 300px) {
+            .container { padding: 0.5rem; }
+            h1 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+            .station-item { padding: 1rem 0.5rem; margin-bottom: 0.8rem; }
+            .station-name { font-size: 1.8rem; }
+            .countdown { font-size: 2rem; padding: 0.3rem 0.8rem; min-width: 100px; }
+            .departed-circle { width: 45px; height: 45px; }
+            .time-adj-btn { width: 40px; height: 40px; font-size: 18px; }
+            .time-display { font-size: 1.2rem; }
+            .time-label { font-size: 1rem; }
+            .control-item label, .control-item .label { font-size: 1rem; }
+        }
+        
+        .scroll-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+        
+        /* Increased scroll button size for easier smartwatch interaction */
+        .scroll-btn { 
+            width: 50px; 
+            height: 50px; 
+            background-color: rgba(0, 51, 102, 0.8); 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            font-size: 24px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+            transition: background-color 0.2s;
+            font-weight: bold;
+        }
+        .scroll-btn:active { background-color: var(--tra-blue); }
+        
+        /* Dark mode scroll buttons */
+        body.dark-mode .scroll-btn {
+            background-color: rgba(74, 144, 226, 0.8);
+        }
+        
+        #noteTextarea,
+        #globalNoteTextarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>乘務人員時刻表</h1>
+        <div class="input-container">
+            <input type="number" id="trainNoInput" placeholder="請輸入車次編號" inputmode="numeric">
+            <button id="searchBtn">查詢時刻表</button>
+        </div>
+        <div id="controls" class="controls" style="display: none;">
+            <div class="control-item">
+                <span class="label">選擇範圍：</span>
+                <button id="rangeStartBtn" type="button">起站</button>
+                <button id="rangeEndBtn" type="button">迄站</button>
+            </div>
+            <div class="control-item">
+                <label for="simpleModeToggle" class="label">簡潔模式</label>
+                <label class="toggle-switch"> <input type="checkbox" id="simpleModeToggle"> <span class="slider"></span> </label>
+            </div>
+            <!-- Added dark mode toggle -->
+            <div class="control-item">
+                <label for="darkModeToggle" class="label">暗光模式</label>
+                <label class="toggle-switch"> <input type="checkbox" id="darkModeToggle"> <span class="slider"></span> </label>
+            </div>
+            <div class="control-item">
+                <label for="hideDepartedToggle" class="label">隱藏出發</label>
+                <label class="toggle-switch"> <input type="checkbox" id="hideDepartedToggle"> <span class="slider"></span> </label>
+            </div>
+            <div class="control-item">
+                <button id="openGlobalNoteBtn" type="button" class="label">備註</button>
+            </div>
+        </div>
+        <div id="result">
+            <p class="info-message">請輸入車次編號後查詢</p>
+        </div>
+    </div>
+    
+    <div id="noteModal" class="modal-overlay"></div>
+    <div id="stationPickerModal" class="modal-overlay"></div>
+    <div id="favoritesModal" class="modal-overlay"></div>
+    <div id="globalNoteModal" class="modal-overlay"></div>
+
+    <div class="scroll-buttons">
+        <button id="scrollTopBtn" class="scroll-btn" title="回到頂部">頂</button>
+        <button id="scrollToNextBtn" class="scroll-btn" title="到下一站">倒</button>
+        <button id="openFavoritesBtn" class="scroll-btn" title="愛心旅客">❤️</button>
+    </div>
+
+    <script>
+        alert("<免責聲名>工具始終只是輔助，如有提早開車或其他情事發生，與開發者無關。祝各位師傅跑車平安順風！");
+        const APP_ID = ''; // 請填入您的 TDX App ID
+        const APP_KEY = ''; // 請填入您的 TDX App Key
+
+        const trainNoInput = document.getElementById('trainNoInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultDiv = document.getElementById('result');
+        const controlsDiv = document.getElementById('controls');
+        const simpleModeToggle = document.getElementById('simpleModeToggle');
+        const darkModeToggle = document.getElementById('darkModeToggle'); // Added dark mode toggle reference
+        const hideDepartedToggle = document.getElementById('hideDepartedToggle');
+        const rangeStartBtn = document.getElementById('rangeStartBtn');
+        const rangeEndBtn = document.getElementById('rangeEndBtn');
+        const openGlobalNoteBtn = document.getElementById('openGlobalNoteBtn');
+        const openFavoritesBtn = document.getElementById('openFavoritesBtn');
+        
+        let countdownInterval;
+        let stationData = [];
+        let stationNotes = {};
+        let manualHiddenUpTo = 0;
+        let rangeStartIndex = null; // 起站索引
+        let rangeEndIndex = null;   // 迄站索引
+        let favoriteStationIndices = new Set();
+        let globalNote = '';
+
+        const signalStations = new Set(['北湖', '竹中', '香山', '大山', '新埔', '日南', '花壇', '南靖', '後壁', '林鳳營', '佳冬', '貢寮', '大里', '龜山', '四城', '瀧溪', '康樂', '九讚頭', '內灣', '六家', '太原', '海端', '沙崙', '美術館', '景美', '武塔', '枋山']);
+
+        searchBtn.addEventListener('click', fetchTimetable);
+        trainNoInput.addEventListener('keyup', (event) => { if (event.key === 'Enter') fetchTimetable(); });
+        simpleModeToggle.addEventListener('change', (e) => { document.querySelector('.station-list')?.classList.toggle('simple-mode', e.target.checked); saveToLocal(); });
+        
+        darkModeToggle.addEventListener('change', (e) => { 
+            document.body.classList.toggle('dark-mode', e.target.checked); 
+            saveToLocal(); 
+        });
+        
+        hideDepartedToggle.addEventListener('change', (e) => { updateVisibility(); saveToLocal(); });
+        document.getElementById('scrollTopBtn').addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        document.getElementById('scrollToNextBtn').addEventListener('click', () => {
+            const nextStation = document.querySelector('.countdown');
+            if (nextStation) {
+                nextStation.closest('.station-item').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+        openFavoritesBtn.addEventListener('click', openFavoritesModal);
+        rangeStartBtn.addEventListener('click', () => openStationPicker('start'));
+        rangeEndBtn.addEventListener('click', () => openStationPicker('end'));
+        openGlobalNoteBtn.addEventListener('click', openGlobalNoteModal);
+
+        async function fetchTimetable() {
+            const trainNo = trainNoInput.value.trim();
+            if (!trainNo || APP_ID === 'YOUR_APP_ID' || APP_KEY === 'YOUR_APP_KEY') {
+                resultDiv.innerHTML = `<p class="error-message">${!trainNo ? '請輸入車次編號' : '請設定tdx金鑰'}</p>`;
+                return;
+            }
+            resultDiv.innerHTML = `<p class="info-message">查詢中...</p>`;
+            if (countdownInterval) clearInterval(countdownInterval);
+            stationNotes = {}; manualHiddenUpTo = 0;
+
+            const trainDate = getTodayDate();
+            const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/DailyTimetable/Today/TrainNo/${trainNo}?%24format=JSON`;
+
+            try {
+                const response = await fetch(apiUrl, { headers: getAuthorizationHeader() });
+                if (!response.ok) throw new Error(`API 請求失敗: ${response.status}`);
+                const data = await response.json();
+                if (!data || data.length === 0 || !data[0].StopTimes) {
+                     resultDiv.innerHTML = `<p class="error-message">找不到今日 ${trainNo} 車次的時刻表資訊。</p>`;
+                     controlsDiv.style.display = 'none';
+                     return false;
+                }
+                
+                let lastDepartureTime = null;
+                let dayOffset = 0;
+                stationData = data[0].StopTimes.map(stop => {
+                    if (lastDepartureTime && stop.DepartureTime < lastDepartureTime) {
+                        dayOffset++;
+                    }
+                    lastDepartureTime = stop.DepartureTime;
+                    return {
+                        ...stop,
+                        ArrivalTime: stop.ArrivalTime + ':00',
+                        DepartureTime: stop.DepartureTime + ':00',
+                        dayOffset: dayOffset
+                    };
+                });
+
+                displayTimetable(stationData);
+                controlsDiv.style.display = 'flex';
+                saveToLocal();
+                return true;
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error-message">查詢失敗: ${error.message}</p>`;
+                controlsDiv.style.display = 'none';
+                return false;
+            }
+        }
+        
+        function displayTimetable(stopTimes) {
+            let listHTML = `<ul class="station-list">`;
+            stopTimes.forEach((stop, index) => {
+                listHTML += `
+                    <li class="station-item" id="station-item-${index}" data-index="${index}" data-original-departure-time="${stop.DepartureTime}">
+                        <div class="top-row">
+                            <div class="station-header">
+                                <span class="station-name" data-index="${index}">${stop.StationName.Zh_tw}</span>
+                                <div class="status-cell" id="status-${index}" data-departure-time="${stop.DepartureTime}"></div>
+                            </div>
+                        </div>
+                        <div class="bottom-row">
+                            <div class="time-group"> <span class="time-label">到:</span> <span class="time-display arrival-time">${stop.ArrivalTime}</span> </div>
+                            <div class="time-group">
+                                <span class="time-label">開:</span>
+                                <button class="time-adj-btn" data-op="-1">-</button>
+                                <span class="time-display departure-time" id="departure-time-${index}">${stop.DepartureTime}</span>
+                                <button class="time-adj-btn" data-op="1">+</button>
+                            </div>
+                        </div>
+                    </li>`;
+            });
+            listHTML += `</ul>`;
+            resultDiv.innerHTML = listHTML;
+            document.getElementById('noteModal').innerHTML = `<div class="modal-content"><h3 id="modalStationName" class="modal-title"></h3><textarea id="noteTextarea" placeholder="請在此輸入備註..."></textarea><div class="modal-actions"><button id="closeNoteBtn">取消</button><button id="saveNoteBtn">儲存</button></div></div>`;
+            
+            attachEventListeners();
+            for (let i = 0; i < stationData.length; i++) {
+                updateStationSymbols(i);
+            }
+            startCountdown();
+            updateVisibility();
+        }
+
+        function attachEventListeners() {
+            document.querySelectorAll('.station-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return; // Removed station-name check to disable click-to-note
+                    document.querySelectorAll('.station-item').forEach(i => i.classList.remove('highlighted-station'));
+                    item.classList.add('highlighted-station');
+                });
+            });
+            document.querySelectorAll('.time-adj-btn').forEach(btn => btn.addEventListener('click', adjustTime));
+            document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
+            document.getElementById('closeNoteBtn').addEventListener('click', closeModal);
+            document.getElementById('noteModal').addEventListener('click', (e) => { if(e.target.id === 'noteModal') closeModal(); });
+            // station picker & favorites & global note overlay close handlers
+            document.getElementById('stationPickerModal').addEventListener('click', (e) => { if(e.target.id === 'stationPickerModal') closeStationPickerModal(); });
+            document.getElementById('favoritesModal').addEventListener('click', (e) => { if(e.target.id === 'favoritesModal') closeFavoritesModal(); });
+            document.getElementById('globalNoteModal').addEventListener('click', (e) => { if(e.target.id === 'globalNoteModal') closeGlobalNoteModal(); });
+        }
+        
+        function startCountdown() {
+            if (countdownInterval) clearInterval(countdownInterval);
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+        
+        function updateCountdown() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let nextUpcomingStationIndex = -1;
+
+            for (let i = 0; i < stationData.length; i++) {
+                const stop = stationData[i];
+                const departureTimeStr = document.getElementById(`status-${i}`)?.dataset.departureTime;
+                if (!departureTimeStr) continue;
+                const departureDateTime = new Date(today);
+                departureDateTime.setDate(today.getDate() + stop.dayOffset);
+                const [h, m, s] = departureTimeStr.split(':');
+                departureDateTime.setHours(h, m, s);
+                if (departureDateTime > now) { nextUpcomingStationIndex = i; break; }
+            }
+
+            document.querySelectorAll('.status-cell').forEach((cell, index) => {
+                const item = document.getElementById(`station-item-${index}`);
+                if (item.style.display === 'none') { cell.innerHTML = ''; return; }
+                const stop = stationData[index];
+                const departureTimeStr = cell.dataset.departureTime;
+                const departureDateTime = new Date(today);
+                departureDateTime.setDate(today.getDate() + stop.dayOffset);
+                const [h, m, s] = departureTimeStr.split(':');
+                departureDateTime.setHours(h, m, s);
+                const diffSeconds = Math.round((departureDateTime - now) / 1000);
+                if (diffSeconds > 0) {
+                    if (index === nextUpcomingStationIndex) {
+                        cell.innerHTML = `<span class="countdown">${diffSeconds}s</span>`;
+                    } else { cell.innerHTML = ''; }
+                } else {
+                    cell.innerHTML = `<div class="departed-circle" title="已出發"></div>`;
+                }
+            });
+            updateVisibility();
+        }
+        
+        function adjustTime(event) {
+            event.stopPropagation();
+            const btn = event.currentTarget;
+            const op = parseInt(btn.dataset.op, 10);
+            const item = btn.closest('.station-item');
+            const index = item.dataset.index;
+            const timeSpan = document.getElementById(`departure-time-${index}`);
+            
+            const originalTimeStr = item.dataset.originalDepartureTime;
+            const [origH, origM, origS] = originalTimeStr.split(':').map(Number);
+            const originalDate = new Date(0, 0, 0, origH, origM, origS);
+            const maxDate = new Date(originalDate.getTime() + 30000);
+
+            const [h, m, s] = timeSpan.textContent.split(':').map(Number);
+            const currentDate = new Date(0, 0, 0, h, m, s);
+            const newDate = new Date(currentDate.getTime() + (op * 30000));
+
+            if (newDate > maxDate || newDate < originalDate) {
+                btn.style.transform = 'scale(0.9)'; setTimeout(() => { btn.style.transform = ''; }, 100);
+                return;
+            }
+            
+            const newTime = `${String(newDate.getHours()).padStart(2, '0')}:${String(newDate.getMinutes()).padStart(2, '0')}:${String(newDate.getSeconds()).padStart(2, '0')}`;
+            timeSpan.textContent = newTime;
+            document.getElementById(`status-${index}`).dataset.departureTime = newTime;
+            updateCountdown();
+            saveToLocal();
+        }
+
+        function updateVisibility() {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            let nextUpcomingStationIndex = -1;
+
+            for (let i = 0; i < stationData.length; i++) {
+                const stop = stationData[i];
+                const departureTimeStr = document.getElementById(`status-${i}`)?.dataset.departureTime;
+                if (!departureTimeStr) continue;
+                const departureDateTime = new Date(today);
+                departureDateTime.setDate(today.getDate() + stop.dayOffset);
+                const [h, m, s] = departureTimeStr.split(':');
+                departureDateTime.setHours(h, m, s);
+                if (departureDateTime > now) { nextUpcomingStationIndex = i; break; }
+            }
+
+            const [rangeStart, rangeEnd] = computeRangeBounds();
+            const hiddenUpTo = hideDepartedToggle.checked ? (nextUpcomingStationIndex !== -1 ? nextUpcomingStationIndex : stationData.length) : -1;
+            document.querySelectorAll('.station-item').forEach(item => {
+                const idx = parseInt(item.dataset.index);
+                const outsideRange = idx < rangeStart || idx > rangeEnd;
+                const isDepartedHidden = hideDepartedToggle.checked && idx < hiddenUpTo;
+                item.style.display = (outsideRange || isDepartedHidden) ? 'none' : 'block';
+            });
+        }
+
+        function saveState() {
+            const adjustedTimes = {};
+            document.querySelectorAll('.departure-time').forEach(el => {
+                const index = el.id.split('-')[2];
+                if (el.textContent !== document.getElementById(`station-item-${index}`).dataset.originalDepartureTime) {
+                    adjustedTimes[index] = el.textContent;
+                }
+            });
+            const state = {
+                trainNo: trainNoInput.value.trim(),
+                notes: stationNotes,
+                times: adjustedTimes,
+                simple: simpleModeToggle.checked,
+                darkMode: darkModeToggle.checked, // Added dark mode to state
+                hideDeparted: hideDepartedToggle.checked,
+                rangeStartIndex: rangeStartIndex,
+                rangeEndIndex: rangeEndIndex,
+                favorites: Array.from(favoriteStationIndices),
+                globalNote: globalNote
+            };
+            const json = JSON.stringify(state);
+            const encoded = LZString.compressToEncodedURIComponent(json);
+            history.replaceState(null, '', '#' + encoded);
+            alert('儲存完畢');
+            saveToLocal();
+        }
+
+        function getTodayDate() { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+        function getAuthorizationHeader() { const gmtString = new Date().toUTCString(); const hmac = CryptoJS.HmacSHA1(`x-date: ${gmtString}`, APP_KEY); const base64Hmac = CryptoJS.enc.Base64.stringify(hmac); return { 'Authorization': `hmac username="${APP_ID}", algorithm="hmac-sha1", headers="x-date", signature="${base64Hmac}"`, 'X-Date': gmtString }; }
+        let currentEditingIndex = null;
+        function openNoteModal(index) { currentEditingIndex = index; const stationName = stationData[index].StationName.Zh_tw; document.getElementById('modalStationName').textContent = `新增/編輯 ${stationName} 站備註`; document.getElementById('noteTextarea').value = stationNotes[index] || ''; document.getElementById('noteModal').classList.add('visible'); document.getElementById('noteTextarea').focus(); }
+        function closeModal() { document.getElementById('noteModal').classList.remove('visible'); currentEditingIndex = null; }
+        function saveNote() { if (currentEditingIndex !== null) { stationNotes[currentEditingIndex] = document.getElementById('noteTextarea').value.trim(); updateStationSymbols(currentEditingIndex); saveToLocal(); } closeModal(); }
+
+        function saveToLocal() {
+            const adjustedTimes = {};
+            document.querySelectorAll('.departure-time').forEach(el => {
+                const index = el.id.split('-')[2];
+                if (el.textContent !== document.getElementById(`station-item-${index}`)?.dataset.originalDepartureTime) {
+                    adjustedTimes[index] = el.textContent;
+                }
+            });
+            const state = {
+                trainNo: trainNoInput.value.trim(),
+                notes: stationNotes,
+                times: adjustedTimes,
+                simple: simpleModeToggle.checked,
+                darkMode: darkModeToggle.checked, // Added dark mode to local storage
+                hideDeparted: hideDepartedToggle.checked,
+                rangeStartIndex: rangeStartIndex,
+                rangeEndIndex: rangeEndIndex,
+                favorites: Array.from(favoriteStationIndices),
+                globalNote: globalNote
+            };
+            localStorage.setItem('trainAssistantState', JSON.stringify(state));
+        }
+
+        function loadStateFromHash() {
+            if (window.location.hash) {
+                try {
+                    const encoded = window.location.hash.substring(1);
+                    const json = LZString.decompressFromEncodedURIComponent(encoded);
+                    const state = JSON.parse(json);
+                    trainNoInput.value = state.trainNo;
+                    simpleModeToggle.checked = state.simple;
+                    darkModeToggle.checked = state.darkMode || false; // Load dark mode state
+                    document.body.classList.toggle('dark-mode', darkModeToggle.checked); // Apply dark mode
+                    hideDepartedToggle.checked = state.hideDeparted;
+                    fetchTimetable().then(success => {
+                        if (success) {
+                            stationNotes = state.notes || {};
+                            Object.entries(state.times || {}).forEach(([index, time]) => { const timeEl = document.getElementById(`departure-time-${index}`); if (timeEl) { timeEl.textContent = time; document.getElementById(`status-${index}`).dataset.departureTime = time; } });
+                            rangeStartIndex = (typeof state.rangeStartIndex === 'number') ? state.rangeStartIndex : null;
+                            rangeEndIndex = (typeof state.rangeEndIndex === 'number') ? state.rangeEndIndex : null;
+                            favoriteStationIndices = new Set((state.favorites || []).filter((v) => typeof v === 'number'));
+                            globalNote = state.globalNote || '';
+                            document.querySelector('.station-list')?.classList.toggle('simple-mode', simpleModeToggle.checked);
+                            updateRangeButtonsLabel();
+                            for (let i = 0; i < stationData.length; i++) {
+                                updateStationSymbols(i);
+                            }
+                            updateCountdown();
+                            updateVisibility();
+                            saveToLocal();
+                        }
+                    });
+                } catch (e) { console.error('無法載入狀態:', e); }
+            }
+        }
+
+        function loadStateFromLocal() {
+            const storedState = localStorage.getItem('trainAssistantState');
+            if (storedState) {
+                try {
+                    const state = JSON.parse(storedState);
+                    trainNoInput.value = state.trainNo || '';
+                    simpleModeToggle.checked = state.simple || false;
+                    darkModeToggle.checked = state.darkMode || false; // Load dark mode state
+                    document.body.classList.toggle('dark-mode', darkModeToggle.checked); // Apply dark mode
+                    hideDepartedToggle.checked = state.hideDeparted || false;
+                    if (state.trainNo) {
+                        fetchTimetable().then(success => {
+                            if (success) {
+                                stationNotes = state.notes || {};
+                                Object.entries(state.times || {}).forEach(([index, time]) => { const timeEl = document.getElementById(`departure-time-${index}`); if (timeEl) { timeEl.textContent = time; document.getElementById(`status-${index}`).dataset.departureTime = time; } });
+                                rangeStartIndex = (typeof state.rangeStartIndex === 'number') ? state.rangeStartIndex : null;
+                                rangeEndIndex = (typeof state.rangeEndIndex === 'number') ? state.rangeEndIndex : null;
+                                favoriteStationIndices = new Set((state.favorites || []).filter((v) => typeof v === 'number'));
+                                globalNote = state.globalNote || '';
+                                document.querySelector('.station-list')?.classList.toggle('simple-mode', simpleModeToggle.checked);
+                                updateRangeButtonsLabel();
+                                for (let i = 0; i < stationData.length; i++) {
+                                    updateStationSymbols(i);
+                                }
+                                updateCountdown();
+                                updateVisibility();
+                            }
+                        });
+                    }
+                } catch (e) { console.error('無法從localStorage載入狀態:', e); }
+            }
+        }
+
+        window.addEventListener('load', () => {
+            if (window.location.hash) {
+                loadStateFromHash();
+            } else {
+                loadStateFromLocal();
+            }
+        });
+
+        function computeRangeBounds() {
+            if (!stationData || stationData.length === 0) return [0, -1];
+            let start = (typeof rangeStartIndex === 'number') ? rangeStartIndex : 0;
+            let end = (typeof rangeEndIndex === 'number') ? rangeEndIndex : (stationData.length - 1);
+            if (start > end) { const tmp = start; start = end; end = tmp; }
+            start = Math.max(0, Math.min(start, stationData.length - 1));
+            end = Math.max(0, Math.min(end, stationData.length - 1));
+            return [start, end];
+        }
+
+        function updateRangeButtonsLabel() {
+            if (!stationData || stationData.length === 0) { rangeStartBtn.textContent = '起站'; rangeEndBtn.textContent = '迄站'; return; }
+            rangeStartBtn.textContent = (typeof rangeStartIndex === 'number') ? stationData[rangeStartIndex].StationName.Zh_tw : '起站';
+            rangeEndBtn.textContent = (typeof rangeEndIndex === 'number') ? stationData[rangeEndIndex].StationName.Zh_tw : '迄站';
+        }
+
+        function openStationPicker(mode) { // mode: 'start' | 'end'
+            if (!stationData || stationData.length === 0) return;
+            const modal = document.getElementById('stationPickerModal');
+            const [startBound, endBound] = [0, stationData.length - 1];
+            const title = mode === 'start' ? '選擇起站' : '選擇迄站';
+            let listHtml = '<div class="modal-content">';
+            listHtml += `<h3 class="modal-title">${title}</h3>`;
+            listHtml += '<div class="modal-station-list">';
+            for (let i = startBound; i <= endBound; i++) {
+                const isFav = favoriteStationIndices.has(i);
+                const name = stationData[i].StationName.Zh_tw;
+                listHtml += `<button data-index="${i}" class="${isFav ? 'is-favorite' : ''}">${name}${isFav ? ' ❤️' : ''}</button>`;
+            }
+            listHtml += '</div>';
+            listHtml += '<div class="modal-actions">'
+                     + `<button id="closeStationPickerBtn">取消</button>`
+                     + `<button id="clearRangeBtn">清除</button>`
+                     + '</div>';
+            listHtml += '</div>';
+            modal.innerHTML = listHtml;
+            modal.classList.add('visible');
+
+            modal.querySelectorAll('button[data-index]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.index, 10);
+                    if (mode === 'start') { rangeStartIndex = idx; }
+                    else { rangeEndIndex = idx; }
+                    if (typeof rangeStartIndex === 'number' && typeof rangeEndIndex === 'number' && rangeStartIndex > rangeEndIndex) {
+                        // 保持 start <= end
+                        const t = rangeStartIndex; rangeStartIndex = rangeEndIndex; rangeEndIndex = t;
+                    }
+                    updateRangeButtonsLabel();
+                    updateVisibility();
+                    saveToLocal();
+                    closeStationPickerModal();
+                });
+            });
+            document.getElementById('closeStationPickerBtn').addEventListener('click', closeStationPickerModal);
+            document.getElementById('clearRangeBtn').addEventListener('click', () => {
+                if (mode === 'start') rangeStartIndex = null; else rangeEndIndex = null;
+                updateRangeButtonsLabel();
+                updateVisibility();
+                saveToLocal();
+                closeStationPickerModal();
+            });
+        }
+
+        function closeStationPickerModal() { document.getElementById('stationPickerModal').classList.remove('visible'); }
+
+        function openFavoritesModal() {
+            if (!stationData || stationData.length === 0) return;
+            const modal = document.getElementById('favoritesModal');
+            let start = (typeof rangeStartIndex === 'number') ? rangeStartIndex : 0;
+            let end = stationData.length - 1;
+            start = Math.max(0, Math.min(start, stationData.length - 1));
+            end = Math.max(0, Math.min(end, stationData.length - 1));
+            const title = '愛心旅客下車站';
+            let listHtml = '<div class="modal-content">';
+            listHtml += `<h3 class="modal-title">${title}</h3>`;
+            listHtml += '<div class="modal-station-list">';
+            for (let i = start; i <= end; i++) {
+                const isFav = favoriteStationIndices.has(i);
+                const name = stationData[i].StationName.Zh_tw;
+                listHtml += `<button data-index="${i}" class="${isFav ? 'is-favorite' : ''}">${name}${isFav ? ' ❤️' : ''}</button>`;
+            }
+            listHtml += '</div>';
+            listHtml += '<div class="modal-actions">'
+                     + `<button id="closeFavoritesBtn">關閉</button>`
+                     + '</div>';
+            listHtml += '</div>';
+            modal.innerHTML = listHtml;
+            modal.classList.add('visible');
+
+            modal.querySelectorAll('button[data-index]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.index, 10);
+                    toggleFavoriteForIndex(idx);
+                    // refresh current button UI
+                    const isFav = favoriteStationIndices.has(idx);
+                    btn.classList.toggle('is-favorite', isFav);
+                    btn.textContent = stationData[idx].StationName.Zh_tw + (isFav ? ' ❤️' : '');
+                });
+            });
+            document.getElementById('closeFavoritesBtn').addEventListener('click', closeFavoritesModal);
+        }
+
+        function closeFavoritesModal() { document.getElementById('favoritesModal').classList.remove('visible'); }
+
+        function toggleFavoriteForIndex(index) {
+            if (favoriteStationIndices.has(index)) favoriteStationIndices.delete(index); else favoriteStationIndices.add(index);
+            updateStationSymbols(index);
+            saveToLocal();
+        }
+
+        function updateStationSymbols(index) {
+            const el = document.querySelector(`.station-name[data-index="${index}"]`);
+            if (!el) return;
+            let symbols = '';
+            const name = stationData[index].StationName.Zh_tw;
+            if (signalStations.has(name)) symbols += '🚦';
+            if (favoriteStationIndices.has(index)) symbols += '❤️';
+            el.innerHTML = name + symbols;
+        }
+
+        function openGlobalNoteModal() {
+            const modal = document.getElementById('globalNoteModal');
+            modal.innerHTML = `<div class=\"modal-content\"><h3 class=\"modal-title\">全域備註</h3><textarea id=\"globalNoteTextarea\" placeholder=\"請在此輸入備註...\">${globalNote ? globalNote.replace(/</g,'&lt;') : ''}</textarea><div class=\"modal-actions\"><button id=\"closeGlobalNoteBtn\">取消</button><button id=\"saveGlobalNoteBtn\">儲存</button></div></div>`;
+            modal.classList.add('visible');
+            document.getElementById('closeGlobalNoteBtn').addEventListener('click', closeGlobalNoteModal);
+            document.getElementById('saveGlobalNoteBtn').addEventListener('click', () => { saveGlobalNote(); closeGlobalNoteModal(); });
+        }
+
+        function closeGlobalNoteModal() { document.getElementById('globalNoteModal').classList.remove('visible'); }
+        function saveGlobalNote() { const ta = document.getElementById('globalNoteTextarea'); if (ta) { globalNote = ta.value.trim(); saveToLocal(); } }
+    </script>
+</body>
+</html>
