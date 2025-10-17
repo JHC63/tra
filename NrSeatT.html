@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>自由座管理 - JR Style</title>
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+  <style>
+    /* JR West 風格設計 */
+    :root {
+      --jr-blue: #0066cc;
+      --jr-blue-dark: #004999;
+      --jr-blue-light: #e6f2ff;
+      --jr-gray: #f5f5f5;
+      --jr-text: #333333;
+      --jr-border: #dddddd;
+      --font-size-base: 18px;
+      --font-size-large: 22px;
+      --font-size-xlarge: 26px;
+      --font-size-button: 20px;
+      --font-size-tab: 24px;
+      --seat-cell-height: 70px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", "Hiragino Sans", sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      color: var(--jr-text);
+      font-size: var(--font-size-base);
+      min-height: 100vh;
+      padding-bottom: 80px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      background: linear-gradient(135deg, var(--jr-blue) 0%, var(--jr-blue-dark) 100%);
+      color: white;
+      padding: 30px 20px;
+      text-align: center;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+    }
+
+    .header h1 {
+      font-size: var(--font-size-xlarge);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: var(--font-size-base);
+      opacity: 0.95;
+    }
+
+    /* 分頁標籤 */
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: white;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 15px 20px;
+      font-size: var(--font-size-tab);
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid transparent;
+      background: var(--jr-gray);
+      color: var(--jr-text);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .tab-button:hover {
+      background: var(--jr-blue-light);
+      border-color: var(--jr-blue);
+    }
+
+    .tab-button.active {
+      background: var(--jr-blue);
+      color: white;
+      box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
+    }
+
+    .tab-content {
+      display: none;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      min-height: 400px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* 快速導入區域 */
+    .quick-import-area {
+      background: var(--jr-blue-light);
+      border: 2px solid var(--jr-blue);
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .quick-import-area::before {
+      content: "快速導入";
+      position: absolute;
+      top: -15px;
+      left: 20px;
+      background: white;
+      padding: 5px 15px;
+      font-weight: 700;
+      font-size: var(--font-size-large);
+      color: var(--jr-blue);
+      border-radius: 20px;
+      border: 2px solid var(--jr-blue);
+    }
+
+    .station-filter-area::before {
+      content: "點擊停靠站篩選";
+    }
+
+    .quick-import-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 12px;
+    }
+
+    .quick-import-buttons button {
+      padding: 12px 16px;
+      font-size: var(--font-size-button);
+      font-weight: 600;
+      background: white;
+      color: var(--jr-blue);
+      border: 2px solid var(--jr-blue);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .quick-import-buttons button:hover {
+      background: var(--jr-blue);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 102, 204, 0.3);
+    }
+
+    .quick-import-buttons button.active-filter {
+      background: var(--jr-blue-dark);
+      color: white;
+      border-color: var(--jr-blue-dark);
+    }
+
+    /* 表單樣式 */
+    .section-title {
+      font-size: var(--font-size-large);
+      font-weight: 700;
+      color: var(--jr-blue);
+      margin: 30px 0 20px 0;
+      padding-bottom: 10px;
+      border-bottom: 3px solid var(--jr-blue);
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 15px;
+    }
+
+    .input-group label {
+      font-size: var(--font-size-large);
+      font-weight: 600;
+      color: var(--jr-text);
+      min-width: 150px;
+    }
+
+    .input-group input[type="number"],
+    .input-group input[type="text"] {
+      flex: 1;
+      max-width: 300px;
+      padding: 12px 16px;
+      font-size: var(--font-size-base);
+      border: 2px solid var(--jr-border);
+      border-radius: 8px;
+      transition: border-color 0.3s ease;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--jr-blue);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
+    /* 按鈕樣式 */
+    button {
+      padding: 12px 24px;
+      font-size: var(--font-size-button);
+      font-weight: 600;
+      background: var(--jr-blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: var(--jr-blue-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 102, 204, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .undo-button {
+      background: #ff9800;
+      font-size: 28px;
+      padding: 8px 16px;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .undo-button:hover {
+      background: #f57c00;
+    }
+
+    /* 座位表格樣式 */
+    .car-chart-container {
+      margin-bottom: 50px;
+      padding: 25px;
+      background: var(--jr-blue-light);
+      border-radius: 12px;
+      border: 2px solid var(--jr-blue);
+    }
+
+    /* 移除橫向滾動，讓表格適應螢幕寬度 */
+    .table-wrapper {
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow-x: visible;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      table-layout: fixed;
+    }
+
+    th, td {
+      border: 2px solid var(--jr-border);
+      text-align: center;
+      vertical-align: middle;
+      padding: 8px 4px;
+    }
+
+    th {
+      background: var(--jr-blue);
+      color: white;
+      font-weight: 700;
+      font-size: var(--font-size-large);
+      padding: 15px 4px;
+    }
+
+    .label {
+      background: var(--jr-blue-light);
+      color: var(--jr-blue);
+      font-weight: 600;
+    }
+
+    /* --- 新的座位單元格樣式 --- */
+    td.combined-seat-cell {
+      /* 4個座位 + 1個走道 = 5列，每列 20% (表格有 8 個座位列 + 1 個走道列，座位共佔 80%，走道 20%) */
+      /* 調整為 4 個座位，走道佔據一格寬度，總共 5 個寬度單元 */
+      width: 20%; 
+      height: var(--seat-cell-height);
+      font-weight: 700;
+      background: white;
+      color: var(--jr-text);
+      cursor: pointer;
+      padding: 0; 
+      position: relative;
+      transition: all 0.2s ease;
+      overflow: hidden; 
+    }
+
+    td.combined-seat-cell:hover {
+      background: var(--jr-blue-light);
+      transform: scale(1.02); 
+    }
+
+    /* 走道寬度調整為一個座位寬度 */
+    .aisle {
+      background: #e0e0e0;
+      width: 20%; 
+    }
+
+    /* 顯示內容的基礎樣式 */
+    .seat-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    /* 預設顯示座號 */
+    .seat-number {
+      font-size: var(--font-size-large);
+      color: var(--jr-text);
+      opacity: 1; /* 默認顯示座號 */
+    }
+
+    /* 站名標籤樣式 */
+    .station-label {
+      font-size: 16px; /* 調整字體大小以容納站名 */
+      font-weight: 600;
+      color: white; 
+      background: var(--jr-blue); 
+      line-height: 1.2;
+      padding: 5px 2px;
+      word-break: break-word;
+      text-align: center;
+    }
+
+    /* 選中狀態 (有下車站名稱) */
+    td.combined-seat-cell.selected .seat-number {
+      opacity: 0; /* 隱藏座號 */
+    }
+
+    td.combined-seat-cell.selected .station-label {
+      opacity: 1; /* 顯示站名 */
+    }
+    /* --- 結束新座位單元格樣式 --- */
+
+    /* Modal 樣式 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+      background: white;
+      margin: 10% auto;
+      padding: 30px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      position: relative;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-50px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-content h2 {
+      color: var(--jr-blue);
+      font-size: var(--font-size-xlarge);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .close-button {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 32px;
+      font-weight: bold;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close-button:hover {
+      color: #333;
+    }
+
+    #modal-station-buttons {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    #modal-station-buttons button {
+      margin: 0;
+      padding: 15px 10px;
+    }
+
+    /* 訊息提示 */
+    .message-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 20px 40px;
+      border-radius: 12px;
+      font-size: var(--font-size-large);
+      font-weight: 600;
+      z-index: 2000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .message-box.show {
+      opacity: 1;
+    }
+
+    /* 手機底部操作列 */
+    .mobile-action-bar {
+      display: none;
+    }
+
+    /* 響應式設計 */
+    @media (max-width: 768px) {
+      :root {
+        --font-size-base: 18px;
+        --font-size-large: 20px;
+        --font-size-xlarge: 24px;
+        --font-size-button: 18px;
+        --font-size-tab: 22px;
+        --seat-cell-height: 60px;
+      }
+
+      body {
+        padding-bottom: 80px;
+      }
+
+      .container {
+        padding: 10px;
+      }
+
+      .header {
+        padding: 20px 15px;
+        margin-bottom: 20px;
+      }
+
+      .tab-content {
+        padding: 20px 15px;
+      }
+
+      .input-group {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .input-group label {
+        min-width: auto;
+      }
+
+      .input-group input {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .quick-import-buttons {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 8px;
+      }
+
+      .quick-import-buttons button {
+        padding: 10px 8px;
+        font-size: 18px;
+      }
+
+      .car-chart-container {
+        padding: 15px;
+        margin-bottom: 30px;
+      }
+
+      /* 移除手機版的 min-width 限制 */
+      table {
+        width: 100%;
+      }
+
+      /* 調整手機版的座位格子大小 */
+      td.combined-seat-cell {
+        width: 20%;
+        font-size: 16px;
+      }
+      
+      .seat-number {
+        font-size: 18px;
+      }
+
+      .station-label {
+        font-size: 18px;
+      }
+
+      th, td {
+        padding: 6px 2px;
+      }
+
+      .desktop-actions {
+        display: none;
+      }
+
+      .mobile-action-bar {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        background: white;
+        padding: 12px 10px;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 999;
+        border-top: 3px solid var(--jr-blue);
+      }
+
+      .mobile-action-bar button {
+        flex: 1;
+        margin: 0 5px;
+        padding: 12px 8px;
+        font-size: 16px;
+      }
+
+/* 懸浮滾動按鈕樣式 */
+.scroll-buttons-container {
+  position: fixed;
+  bottom: 100px; /* 避開底部的 mobile-action-bar */
+  right: 20px;
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scroll-buttons-container button {
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+/* 確保手機版時按鈕位置正確 */
+@media (max-width: 768px) {
+  .scroll-buttons-container {
+    bottom: 90px; /* 手機版底部操作列更高 */
+  }
+}
+
+      #modal-station-buttons {
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+
+      #modal-station-buttons button {
+        padding: 12px 5px;
+        font-size: 18px;
+      }
+
+      .modal-content {
+        margin: 20% auto;
+        padding: 25px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🚄 自由座管理</h1>
+      <p> Non-reserved Seat Management </p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-button active" onclick="openTab(event, 'settings-tab')">⚙️ 設定</button>
+      <button class="tab-button" onclick="openTab(event, 'charts-tab')">📋 座位表</button>
+    </div>
+
+    <div id="settings-tab" class="tab-content active">
+      <div class="quick-import-area">
+        <div class="quick-import-buttons">
+          <button onclick="importQuickData('110次')">110次</button>
+          <button onclick="importQuickData('111次')">111次</button>
+          <button onclick="importQuickData('116次')">116次</button>
+          <button onclick="importQuickData('117次')">117次</button>
+          <button onclick="importQuickData('119次')">119次</button>
+          <button onclick="importQuickData('120次')">120次</button>
+          <button onclick="importQuickData('127次')">127次</button>
+          <button onclick="importQuickData('131次')">131次</button>
+          <button onclick="importQuickData('132次')">132次</button>
+          <button onclick="importQuickData('133次')">133次</button>
+          <button onclick="importQuickData('143次')">143次</button>
+          <button onclick="importQuickData('145次')">145次</button>
+          <button onclick="importQuickData('146次')">146次</button>
+          <button onclick="importQuickData('148次')">148次</button>
+          <button onclick="importQuickData('154次')">154次</button>
+          <button onclick="importQuickData('158次')">158次</button>
+          <button onclick="importQuickData('160次')">160次</button>
+          <button onclick="importQuickData('193次')">193次</button>
+          <button onclick="importQuickData('194次')">194次</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">車廂設定</h2>
+      <div class="input-group">
+        <label for="num-cars">車廂數量：</label>
+        <input type="number" id="num-cars" value="1" min="1">
+      </div>
+      <div class="input-group">
+        <label for="start-car">起始車廂：</label>
+        <input type="number" id="start-car" value="9" min="1">
+      </div>
+
+      <h2 class="section-title">停靠站設定</h2>
+      <div id="stations-container"></div>
+      
+      <div class="button-group">
+        <button onclick="addStationField()">➕ 新增停靠站</button>
+        <button onclick="confirmSettings()">✅ 確定</button>
+        <button onclick="resetSettingsToDefault()" style="background: #f44336;">🗑️ 清空</button>
+      </div>
+    </div>
+
+    <div id="charts-tab" class="tab-content">
+      <div class="desktop-actions" style="margin-bottom: 20px; text-align: center;">
+        <button class="undo-button" onclick="undoLastAction()" title="上一步">↩️</button>
+        <button onclick="exportSeatingCharts()">💾 存檔/複製網址</button>
+        <button onclick="showHandoverQRCode()">📱 生成QRcode</button>
+      </div>
+
+      <div class="quick-import-area station-filter-area">
+        <div class="quick-import-buttons" id="global-station-buttons"></div>
+      </div>
+
+      <div id="seating-charts"></div>
+    </div>
+  </div>
+
+  <div id="message-box" class="message-box"></div>
+
+   <div id="startup-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeStartupModal()">&times;</span>
+      <h2>⚠️ 使用注意事項</h2>
+      <div style="text-align: left; line-height: 1.8; font-size: var(--font-size-base);">
+        <p style="color: #f44336; font-weight: 700; margin: 15px 0;">1. 勿在 LINE 直接點擊網址使用本網頁！</p>
+        <p style="margin: 15px 0;">2. 本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「存檔/複製網址」按鈕，並請不要關閉網頁以防資料遺失。</p>
+        <p style="margin: 15px 0;">3. <a href="https://jhc63.github.io/tra/newcarriageqr.html" target="_blank" style="color: var(--jr-blue); text-decoration: underline;">列車編組QRcode生成器網頁</a></p>
+        <p style="margin: 15px 0;">4. 祝各位師傅跑車順風、平安。</p>
+      </div>
+      <div style="text-align: center; margin-top: 25px;">
+        <button onclick="closeStartupModal()">✅ 收到</button>
+      </div>
+    </div>
+  </div>
+
+   <div id="station-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeStationModal()">&times;</span>
+      <h2>選擇下車站</h2>
+      <div id="modal-station-buttons"></div>
+    </div>
+  </div>
+
+   <div id="qrcode-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-button" onclick="closeQRCodeModal()">&times;</span>
+      <h2>交班 QR Code</h2>
+      <div id="qrcode-display" style="display: flex; justify-content: center; padding: 20px;"></div>
+      <p style="text-align: center; margin-top: 15px; font-size: var(--font-size-base);">
+        請用手勢將圖片放大方便對方掃描。如 QR code 錯誤，請點擊「存檔/複製網址」按鈕後到 
+        <a href="https://qrcode-generator.tw/" target="_blank" style="color: var(--jr-blue);">其他網站</a> 生成。
+      </p>
+    </div>
+  </div>
+
+   <div class="mobile-action-bar">
+    <button onclick="undoLastAction()" title="上一步">↩️</button>
+    <button onclick="exportSeatingCharts()">💾 存檔</button>
+    <button onclick="showHandoverQRCode()">📱 QR</button>
+  </div>
+
+  <script>
+    // 座位配置 (2+2 排列)
+    const seatLayout = [
+      [1, 3, 4, 2], [5, 7, 8, 6], [9, 11, 12, 10], [13, 15, 16, 14],
+      [17, 19, 20, 18], [21, 23, 24, 22], [25, 27, 28, 26], [29, 31, 32, 30],
+      [33, 35, 36, 34], [37, 39, 40, 38], [41, 43, 44, 42], [45, 47, 48, 46],
+      [49, 51, 52, 50]
+    ];
+
+    // 全域變數
+    const carPerspectiveState = {};
+    let currentStations = [];
+    let lastActiveStationFilter = null;
+    const defaultNumCars = 1;
+    const defaultStartCar = 9;
+    const defaultStationFields = 5;
+    let history = [];
+    let historyPointer = -1;
+
+    // 列車預設資料
+    const trainDataPresets = {
+      '110次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
+      '111次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "桃園", "臺中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"] },
+      '116次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "臺中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+      '117次': { numCars: 3, startCar: 9, stations: ["基隆", "八堵", "七堵", "汐止", "南港", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "苗栗", "豐原", "臺中", "彰化", "員林", "斗六", "民雄", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
+      '119次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
+      '120次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+      '127次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
+      '131次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "新竹", "臺中", "彰化", "嘉義", "臺南", "高雄", "屏東", "潮州"] },
+      '132次': { numCars: 1, startCar: 9, stations: ["枋寮", "潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "新竹", "板橋", "臺北", "松山", "南港", "七堵"] },
+      '133次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "大肚", "彰化", "員林", "斗六", "嘉義", "新營", "善化", "臺南", "新左營", "高雄", "鳳山", "屏東", "潮州"] },
+      '143次': { numCars: 1, startCar: 9, stations: ["七堵", "汐止", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化", "嘉義", "臺南", "高雄", "鳳山", "屏東", "潮州"] },
+      '145次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
+      '146次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+      '148次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
+      '154次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "臺中", "桃園", "板橋", "臺北", "松山", "南港"] },
+      '158次': { numCars: 3, startCar: 9, stations: ["彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+      '160次': { numCars: 3, startCar: 9, stations: ["田中", "社頭", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+      '193次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
+      '194次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] }
+    };
+
+    // 狀態管理
+    function saveState() {
+      const numCars = document.getElementById('num-cars').value;
+      const startCar = document.getElementById('start-car').value;
+      const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
+      const seatSelections = {};
+      
+      // 注意：查找元素變更為新的 label ID
+      document.querySelectorAll('.station-label').forEach(label => {
+        if (label.textContent) {
+          // label ID 格式為 'label-9-1'，取後面部分 '9-1'
+          seatSelections[label.id.substring(6)] = label.textContent; 
+        }
+      });
+
+      const state = {
+        numCars, stations, startCar, seatSelections,
+        carPerspectives: { ...carPerspectiveState },
+        lastFilter: lastActiveStationFilter
+      };
+
+      if (historyPointer < history.length - 1) {
+        history = history.slice(0, historyPointer + 1);
+      }
+      history.push(state);
+      historyPointer = history.length - 1;
+    }
+
+    function loadState(state) {
+      if (!state) return;
+      
+      document.getElementById('num-cars').value = state.numCars || defaultNumCars;
+      document.getElementById('start-car').value = state.startCar || defaultStartCar;
+      
+      const stationsContainer = document.getElementById('stations-container');
+      stationsContainer.innerHTML = '';
+      (state.stations || []).forEach(station => {
+        addStationField();
+        stationsContainer.lastElementChild.querySelector('input').value = station;
+      });
+      
+      while (stationsContainer.children.length < defaultStationFields) {
+        addStationField();
+      }
+
+      Object.keys(carPerspectiveState).forEach(key => delete carPerspectiveState[key]);
+      if (state.carPerspectives) {
+        Object.assign(carPerspectiveState, state.carPerspectives);
+      }
+
+      confirmSettings(false);
+
+      setTimeout(() => {
+        if (state.seatSelections) {
+          document.querySelectorAll('.station-label').forEach(label => {
+            // 從 label ID (label-9-1) 取得 seatIdBase (9-1)
+            const seatIdBase = label.id.substring(6); 
+            const stationName = state.seatSelections[seatIdBase] || '';
+            label.textContent = stationName;
+            // 呼叫新的 toggleSeatColor
+            toggleSeatColor(seatIdBase, stationName); 
+          });
+        }
+        if (state.lastFilter && currentStations.includes(state.lastFilter)) {
+          updateStations(state.lastFilter, currentStations);
+        }
+      }, 50);
+    }
+
+    function undoLastAction() {
+      if (historyPointer > 0) {
+        historyPointer--;
+        loadState(history[historyPointer]);
+      } else {
+        showMessage('沒有上一步的動作了');
+      }
+    }
+
+    // 分頁切換
+    function openTab(evt, tabId) {
+      document.querySelectorAll(".tab-content").forEach(tc => tc.classList.remove("active"));
+      document.querySelectorAll(".tab-button").forEach(tb => tb.classList.remove("active"));
+      document.getElementById(tabId).classList.add("active");
+      const button = evt ? evt.currentTarget : document.querySelector(`.tab-button[onclick*="'${tabId}'"]`);
+      if (button) button.classList.add("active");
+    }
+
+    // 停靠站管理
+    function addStationField() {
+      const container = document.getElementById('stations-container');
+      const index = container.children.length + 1;
+      const newField = document.createElement('div');
+      newField.className = 'input-group';
+      newField.innerHTML = `
+        <label>停靠站 ${index}：</label>
+        <input type="text" class="station-input" placeholder="請輸入站名">
+      `;
+      container.appendChild(newField);
+    }
+
+    function resetSettingsToDefault() {
+      if (!confirm('確定要清空所有設定嗎？')) return;
+      
+      document.getElementById('num-cars').value = defaultNumCars;
+      document.getElementById('start-car').value = defaultStartCar;
+      const container = document.getElementById('stations-container');
+      container.innerHTML = '';
+      for (let i = 0; i < defaultStationFields; i++) {
+        addStationField();
+      }
+      document.getElementById('seating-charts').innerHTML = '';
+      document.getElementById('global-station-buttons').innerHTML = '';
+      lastActiveStationFilter = null;
+      Object.keys(carPerspectiveState).forEach(key => delete carPerspectiveState[key]);
+      history = [];
+      historyPointer = -1;
+      showMessage('已清空所有設定');
+    }
+
+    function confirmSettings(saveToHistory = true) {
+      const numCars = parseInt(document.getElementById('num-cars').value) || defaultNumCars;
+      const startCar = parseInt(document.getElementById('start-car').value) || defaultStartCar;
+      currentStations = Array.from(document.querySelectorAll('.station-input'))
+        .map(input => input.value.trim()).filter(val => val !== '');
+
+      if (currentStations.length === 0) {
+        alert('請至少輸入一個停靠站！');
+        return;
+      }
+
+      const output = document.getElementById('seating-charts');
+      output.innerHTML = '';
+      
+      const globalStationButtonsContainer = document.getElementById('global-station-buttons');
+      globalStationButtonsContainer.innerHTML = '';
+      
+      currentStations.forEach(station => {
+        const button = document.createElement('button');
+        button.textContent = station;
+        button.onclick = () => {
+          updateStations(station, currentStations);
+          saveState();
+        };
+        globalStationButtonsContainer.appendChild(button);
+      });
+
+      lastActiveStationFilter = null;
+
+      for (let car = startCar; car < startCar + numCars; car++) {
+        if (carPerspectiveState[car] === undefined) carPerspectiveState[car] = false;
+        output.appendChild(generateSeatingChart(car, currentStations, carPerspectiveState[car]));
+      }
+
+      if (saveToHistory) saveState();
+      openTab(null, 'charts-tab');
+      //showMessage('已恢復上一動作！');
+    }
+
+    // 座位表生成
+    function generateSeatingChart(carNumber, stations, isFlipped) {
+      const carContainer = document.createElement('div');
+      carContainer.className = 'car-chart-container';
+      carContainer.id = `car-chart-${carNumber}`;
+
+      const title = document.createElement('h3');
+      title.style.cssText = 'text-align: center; color: var(--jr-blue); font-size: var(--font-size-xlarge); margin-bottom: 15px;';
+      title.textContent = `第 ${carNumber} 車`;
+      carContainer.appendChild(title);
+
+      const tableWrapper = document.createElement('div');
+      tableWrapper.className = 'table-wrapper';
+      
+      const table = document.createElement('table');
+      let displaySeatLayout = JSON.parse(JSON.stringify(seatLayout));
+      
+      if (isFlipped) {
+        displaySeatLayout.forEach(row => row.reverse());
+        displaySeatLayout.reverse();
+      }
+
+      let html = `
+        <tr>
+          <th colspan="5">第 ${carNumber} 車 ${isFlipped ? '' : ''}</th>
+        </tr>
+        <tr>
+          <th class="label">窗戶</th>
+          <th class="label">走道</th>
+          <th class="empty"></th>
+          <th class="label">走道</th>
+          <th class="label">窗戶</th>
+        </tr>
+      `;
+
+      displaySeatLayout.forEach(row => {
+        html += '<tr>';
+        row.forEach((seatNum, index) => {
+          const seatIdBase = `${carNumber}-${seatNum}`;
+          
+          // 合併後的單元格
+          html += `<td class="combined-seat-cell" onclick="openStationModal('${seatIdBase}')" id="cell-${seatIdBase}">
+            <span class="seat-display seat-number" id="seat-num-${seatIdBase}">${seatNum}</span>
+            <span class="seat-display station-label" id="label-${seatIdBase}"></span>
+          </td>`;
+
+          // 走道分隔線 (在 A/C 之後，即 index === 1)
+          if (index === 1) {
+            html += '<td class="aisle"></td>';
+          }
+        });
+        html += '</tr>';
+      });
+
+      html += `
+        <tr>
+          <th class="label">窗戶</th>
+          <th class="label">走道</th>
+          <th class="empty"></th>
+          <th class="label">走道</th>
+          <th class="label">窗戶</th>
+        </tr>
+      `;
+
+      table.innerHTML = html;
+      tableWrapper.appendChild(table);
+      carContainer.appendChild(tableWrapper);
+
+      const toggleButton = document.createElement('button');
+      toggleButton.textContent = '🔄 視角切換';
+      toggleButton.style.cssText = 'display: block; margin: 15px auto 0;';
+      toggleButton.onclick = () => {
+        toggleIndividualPerspective(carNumber, stations);
+        saveState();
+      };
+      carContainer.appendChild(toggleButton);
+
+      return carContainer;
+    }
+
+    /**
+     * 根據是否有站名來切換單元格的顯示狀態 (座號/站名)
+     * @param {string} seatIdBase - 座位 ID (e.g. '9-1')
+     * @param {string} stationName - 下車站名稱或空字串
+     */
+    function toggleSeatColor(seatIdBase, stationName) {
+      const cellElement = document.getElementById(`cell-${seatIdBase}`); // 整個 td
+      const labelElement = document.getElementById(`label-${seatIdBase}`); // 站名 span
+
+      if (cellElement && labelElement) {
+        if (stationName) {
+          cellElement.classList.add('selected');
+          // 員工顯示不同顏色
+          labelElement.style.backgroundColor = (stationName === '員工') ? '#0066cc' : '#4caf50'; 
+        } else {
+          cellElement.classList.remove('selected');
+          labelElement.style.backgroundColor = ''; 
+        }
+      }
+    }
+
+    function updateStations(selectedStation, stations) {
+      lastActiveStationFilter = selectedStation;
+      const selectedIndex = stations.indexOf(selectedStation);
+      
+      document.querySelectorAll('#global-station-buttons button').forEach(button => {
+        const buttonIndex = stations.indexOf(button.textContent);
+        if (button.textContent === selectedStation) {
+          button.classList.add('active-filter');
+        } else {
+          button.classList.remove('active-filter');
+        }
+        button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
+      });
+
+      // 篩選掉所有已過站或不是員工的標記
+      document.querySelectorAll('.station-label').forEach(label => {
+        const stationName = label.textContent;
+        if (stationName && stationName !== '員工' && stations.indexOf(stationName) <= selectedIndex) {
+          const seatIdBase = label.id.substring(6);
+          label.textContent = '';
+          toggleSeatColor(seatIdBase, '');
+        }
+      });
+    }
+
+    function toggleIndividualPerspective(carNumber, stations) {
+      carPerspectiveState[carNumber] = !carPerspectiveState[carNumber];
+      const oldCarChartContainer = document.getElementById(`car-chart-${carNumber}`);
+      
+      if (oldCarChartContainer) {
+        const currentCarSelections = {};
+        // 獲取當前車廂所有座位的站名
+        oldCarChartContainer.querySelectorAll('.station-label').forEach(label => {
+          currentCarSelections[label.id.substring(6)] = label.textContent;
+        });
+
+        const newCarChartContainer = generateSeatingChart(carNumber, stations, carPerspectiveState[carNumber]);
+        oldCarChartContainer.parentNode.replaceChild(newCarChartContainer, oldCarChartContainer);
+
+        // 將站名數據重新載入到新的表格結構中
+        for (const seatIdBase in currentCarSelections) {
+          const stationName = currentCarSelections[seatIdBase];
+          const labelElement = document.getElementById(`label-${seatIdBase}`);
+          if (labelElement) {
+            labelElement.textContent = stationName;
+            toggleSeatColor(seatIdBase, stationName);
+          }
+        }
+      }
+    }
+
+    // 匯出與匯入
+    function generateExportUrl() {
+      const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
+      const seatSelections = {};
+      
+      document.querySelectorAll('.station-label').forEach(label => {
+        if (label.textContent) {
+          const stationIndex = stations.indexOf(label.textContent);
+          // label ID 格式為 'label-9-1'，取後面部分 '9-1'
+          const seatIdBase = label.id.substring(6); 
+          
+          if (stationIndex > -1) {
+            seatSelections[seatIdBase] = stationIndex;
+          } else if (label.textContent === '員工') {
+            seatSelections[seatIdBase] = 'E';
+          }
+        }
+      });
+
+      const filterIndex = lastActiveStationFilter ? stations.indexOf(lastActiveStationFilter) : -1;
+
+      const shortKeyExportData = {
+        n: document.getElementById('num-cars').value,
+        c: document.getElementById('start-car').value,
+        t: stations,
+        s: seatSelections,
+        p: carPerspectiveState,
+        f: filterIndex > -1 ? filterIndex : null
+      };
+
+      const hash = LZString.compressToEncodedURIComponent(JSON.stringify(shortKeyExportData));
+      return `${window.location.href.split('#')[0]}#${hash}`;
+    }
+
+    function exportSeatingCharts() {
+      const newUrl = generateExportUrl();
+      window.history.replaceState(null, '', newUrl);
+      navigator.clipboard.writeText(newUrl)
+        .then(() => showMessage('✅ 已存檔並複製網址'))
+        .catch(() => showMessage('⚠️ 複製失敗，請手動複製網址'));
+    }
+
+    function loadSettingsFromHash() {
+      if (!location.hash || location.hash.length <= 1) {
+        resetSettingsToDefault();
+        openTab(null, 'settings-tab');
+        document.getElementById('startup-modal').style.display = 'block';
+        return;
+      }
+
+      try {
+        const decompressedString = LZString.decompressFromEncodedURIComponent(location.hash.substring(1));
+        if (!decompressedString) throw new Error("Decompression failed");
+        
+        const hashData = JSON.parse(decompressedString);
+        const stations = hashData.t || [];
+        const seatSelectionsWithNames = {};
+        
+        if (hashData.s) {
+          for (const seatId in hashData.s) {
+            const stationData = hashData.s[seatId];
+            if (typeof stationData === 'number' && stations[stationData] !== undefined) {
+              seatSelectionsWithNames[seatId] = stations[stationData];
+            } else if (stationData === 'E') {
+              seatSelectionsWithNames[seatId] = '員工';
+            }
+          }
+        }
+
+        const lastFilterName = (hashData.f !== null && stations[hashData.f]) ? stations[hashData.f] : null;
+
+        const fullData = {
+          numCars: hashData.n,
+          startCar: hashData.c,
+          stations: stations,
+          seatSelections: seatSelectionsWithNames,
+          carPerspectives: hashData.p,
+          lastFilter: lastFilterName
+        };
+
+        loadState(fullData);
+        openTab(null, 'charts-tab');
+        saveState();
+      } catch (e) {
+        console.error("Failed to parse hash:", e);
+        alert("無法解析網址中的座位表資料，請檢查連結是否正確。將恢復預設設定。");
+        resetSettingsToDefault();
+        openTab(null, 'settings-tab');
+      }
+    }
+
+    function importQuickData(trainName) {
+      const preset = trainDataPresets[trainName];
+      if (preset) {
+        loadState(preset);
+        saveState();
+        showMessage(`✅ 已載入 ${trainName} 設定`);
+      }
+    }
+
+    // Modal 管理
+    const stationModal = document.getElementById('station-modal');
+    const qrCodeModal = document.getElementById('qrcode-modal');
+    const qrCodeDisplay = document.getElementById('qrcode-display');
+    const startupModal = document.getElementById('startup-modal');
+
+    let currentSeatIdBase = ''; // 用於記錄當前打開 Modal 的座位 ID
+
+    function openStationModal(seatIdBase) {
+      currentSeatIdBase = seatIdBase;
+      stationModal.dataset.seatId = seatIdBase;
+      const buttonContainer = document.getElementById('modal-station-buttons');
+      buttonContainer.innerHTML = '';
+      
+      const filterIndex = lastActiveStationFilter ? currentStations.indexOf(lastActiveStationFilter) : -1;
+      const availableStations = currentStations.filter((_, index) => index > filterIndex);
+
+      const clearButton = document.createElement('button');
+      clearButton.textContent = '清除';
+      clearButton.style.background = '#f44336';
+      clearButton.onclick = () => setStationForSeat('', currentSeatIdBase);
+      buttonContainer.appendChild(clearButton);
+
+      const employeeButton = document.createElement('button');
+      employeeButton.textContent = ' 員工';
+      employeeButton.style.background = '#7ff436';
+      employeeButton.onclick = () => setStationForSeat('員工', currentSeatIdBase);
+      buttonContainer.appendChild(employeeButton);
+
+      availableStations.forEach(station => {
+        const button = document.createElement('button');
+        button.textContent = station;
+        button.onclick = () => setStationForSeat(station, currentSeatIdBase);
+        buttonContainer.appendChild(button);
+      });
+
+      stationModal.style.display = 'block';
+    }
+
+    function closeStationModal() {
+      stationModal.style.display = 'none';
+      currentSeatIdBase = '';
+    }
+
+    function closeQRCodeModal() {
+      qrCodeModal.style.display = 'none';
+      qrCodeDisplay.innerHTML = '';
+    }
+
+    function closeStartupModal() {
+      startupModal.style.display = 'none';
+    }
+
+    function setStationForSeat(stationName, seatIdBase) {
+      const label = document.getElementById(`label-${seatIdBase}`);
+      if (label) label.textContent = stationName;
+      // 呼叫更新後的 toggleSeatColor
+      toggleSeatColor(seatIdBase, stationName); 
+      closeStationModal();
+      saveState();
+    }
+
+    function showHandoverQRCode() {
+      const dataToEncode = generateExportUrl();
+      const encodedData = encodeURIComponent(dataToEncode);
+      // 使用穩定且支援 SVG 的 QR Code API
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=H&format=svg&data=${encodedData}`;
+
+      qrCodeDisplay.innerHTML = '';
+
+      const qrImage = document.createElement('img');
+      qrImage.src = qrApiUrl;
+      qrImage.alt = '交班 QR Code';
+      qrImage.style.cssText = 'width: 100%; max-width: 400px; height: auto;';
+
+      qrCodeDisplay.appendChild(qrImage);
+      qrCodeModal.style.display = 'block';
+    }
+
+    function showMessage(message) {
+      const messageBox = document.getElementById('message-box');
+      messageBox.textContent = message;
+      messageBox.classList.add('show');
+      setTimeout(() => messageBox.classList.remove('show'), 2500);
+    }
+
+// 滾動功能
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function scrollToBottom() {
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    // 點擊 Modal 外部關閉
+    window.onclick = function(event) {
+      if (event.target == stationModal) closeStationModal();
+      if (event.target == qrCodeModal) closeQRCodeModal();
+      if (event.target == startupModal) closeStartupModal();
+    }
+
+    // 初始化
+    window.onload = function() {
+      loadSettingsFromHash();
+    };
+  </script>
+<div class="scroll-buttons-container" id="scroll-buttons-container">
+    <button onclick="scrollToTop()" title="回頂端">⏫</button>
+    <button onclick="scrollToBottom()" title="到底部">⏬</button>
+  </div>
+
+</body>
+</html>
