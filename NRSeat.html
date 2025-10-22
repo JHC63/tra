@@ -471,6 +471,15 @@
     .mobile-action-bar {
       display: none;
     }
+    
+    /* === 新增：按下顯示座號按鈕時的樣式 === */
+    body.show-all-numbers .seat-number {
+  opacity: 1 !important;
+}
+body.show-all-numbers .station-label {
+  opacity: 0 !important;
+}
+    /* === 結束新增樣式 === */
 
     /* 響應式設計 */
     @media (max-width: 768px) {
@@ -708,9 +717,10 @@
       <div style="text-align: left; line-height: 1.8; font-size: var(--font-size-base);">
         <p style="color: #f44336; font-weight: 700; margin: 15px 0;">1. 勿在 LINE 直接點擊網址使用本網頁！</p>
         <p style="margin: 15px 0;">2. 本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「存檔/複製網址」按鈕，並請不要關閉網頁以防資料遺失。</p>
-        <p style="margin: 15px 0;">3. <a href="https://jhc63.github.io/tra/newcarriageqr.html" target="_blank" style="color: var(--jr-blue); text-decoration: underline;">列車編組QRcode生成器</a></p>
-         <p style="margin: 15px 0;">4. <a href="https://jhc63.github.io/tra/TADT.html" target="_blank" style="color: var(--jr-blue); text-decoration: underline;">乘務人員時刻表</a>，手機、有瀏覽器的智慧型手錶（如apple watch)皆可使用。</a></p>
-         <p style="margin: 15px 0;">5.祝各位師傅跑車平安順風。</p>
+        <p style="margin: 15px 0;">3.按住🔢此按鈕可顯示全部座號。</p>
+        <p style="margin: 15px 0;">4. <a href="https://jhc63.github.io/tra/newcarriageqr.html" target="_blank" style="color: var(--jr-blue); text-decoration: underline;">列車編組QRcode生成</a></p>
+          <p style="margin: 15px 0;">5. <a href="https://jhc63.github.io/tra/TADT.html" target="_blank" style="color: var(--jr-blue); text-decoration: underline;">乘務人員時刻表</a>，手機、有瀏覽器的智慧型手錶（如apple watch)皆可使用。</a></p>
+         <p style="margin: 15px 0;">6.祝各位師傅跑車平安順風。</p>
          
       </div>
       <div style="text-align: center; margin-top: 25px;">
@@ -1270,8 +1280,18 @@
       messageBox.classList.add('show');
       setTimeout(() => messageBox.classList.remove('show'), 2500);
     }
+    
+    // === 新增：顯示/恢復座位號的函式 ===
+    function showAllSeatNumbers() {
+      document.body.classList.add('show-all-numbers');
+    }
 
-// 滾動功能
+    function revertSeatDisplay() {
+      document.body.classList.remove('show-all-numbers');
+    }
+    // === 結束新增函式 ===
+
+    // 滾動功能
     function scrollToTop() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1294,6 +1314,7 @@
   </script>
 <div class="scroll-buttons-container" id="scroll-buttons-container">
     <button onclick="scrollToTop()" title="回頂端">⏫</button>
+    <button onmousedown="showAllSeatNumbers()" onmouseup="revertSeatDisplay()" ontouchstart="showAllSeatNumbers()" ontouchend="revertSeatDisplay()" title="按住顯示座號">🔢</button>
     <button onclick="scrollToBottom()" title="到底部">⏬</button>
   </div>
 
