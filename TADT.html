@@ -13,7 +13,6 @@
             --border-color: #ddd;
         }
         
-        /* Added dark mode CSS variables */
         body.dark-mode {
             --tra-blue: #4a90e2;
             --tra-orange: #ff9933;
@@ -34,7 +33,6 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Dark mode body styles */
         body.dark-mode {
             background-color: var(--bg-primary);
             color: var(--text-primary);
@@ -42,7 +40,6 @@
         
         .container { max-width: 100%; margin: 0 auto; background-color: #fff; padding: 1rem; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
         
-        /* Dark mode container */
         body.dark-mode .container {
             background-color: var(--bg-secondary);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -52,7 +49,6 @@
         .input-container { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
         #trainNoInput { width: 100%; box-sizing: border-box; padding: 1rem; font-size: 1.4rem; border: 1px solid var(--border-color); border-radius: 5px; text-align: center; }
         
-        /* Dark mode input */
         body.dark-mode #trainNoInput {
             background-color: #333;
             color: var(--text-primary);
@@ -63,23 +59,13 @@
         #searchBtn:hover, #searchBtn:active { background-color: #e67300; }
         .controls { display: flex; flex-direction: column; gap: 0.8rem; align-items: flex-start; margin-bottom: 1rem; padding: 0.5rem; background-color: #f9f9f9; border-radius: 4px; }
         
-        /* Dark mode controls */
         body.dark-mode .controls {
             background-color: #252525;
         }
         
         .control-item { display: flex; align-items: center; gap: 0.5rem; width: 100%; }
-        
-        /* Increased label font size to 1.2rem */
-        .control-item label {
-            font-size: 1.2rem;
-        }
-        
-        /* Added font-size for .label class inside .control-item to fix "範圍：" text size */
-        .control-item .label {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
+        .control-item label { font-size: 1.2rem; }
+        .control-item .label { font-size: 1.2rem; font-weight: 600; }
         
         .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .toggle-switch input { display: none; }
@@ -91,16 +77,23 @@
         .info-message, .error-message { text-align: center; padding: 1.5rem 0; font-size: 1.1rem; }
         .error-message { color: var(--danger-red); background-color: #f2dede; border: 1px solid #ebccd1; border-radius: 4px; padding: 1rem; }
         
-        /* Dark mode error message */
         body.dark-mode .error-message {
             background-color: #3d2020;
             border-color: #5a2a2a;
         }
         
         .station-list { list-style-type: none; padding: 0; margin: 0; }
-        .station-item { border: 2px solid transparent; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background-color: #fdfdfd; box-shadow: 0 1px 3px rgba(0,0,0,0.08); transition: all 0.2s; }
         
-        /* Dark mode station item */
+        .station-item { 
+            border: 2px solid transparent; 
+            border-radius: 6px; 
+            padding: 1.5rem 1rem; 
+            margin-bottom: 1.2rem; 
+            background-color: #fdfdfd; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.12); 
+            transition: all 0.2s; 
+        }
+        
         body.dark-mode .station-item {
             background-color: #2a2a2a;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
@@ -110,29 +103,78 @@
         .station-list.simple-mode .bottom-row { display: none; }
         .top-row, .bottom-row { display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
         .top-row { margin-bottom: 0.8rem; }
-        .station-header { display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .station-name { font-weight: bold; font-size: 1.6rem; flex-grow: 1; }
-        .status-cell { min-width: 100px; text-align: right; margin-top: 0.5rem; }
-        .countdown { color: var(--danger-red); font-weight: bold; font-size: 1.2rem; }
-        .departed-circle { display: inline-block; width: 30px; height: 30px; background-color: var(--success-green); border-radius: 50%; cursor: default; }
+        
+        .station-header { 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center; 
+            width: 100%; 
+            gap: 1rem;
+        }
+        
+        .station-name { 
+            font-weight: bold; 
+            font-size: 2.4rem; 
+            text-align: center;
+            width: 100%;
+            line-height: 1.2;
+        }
+        
+        .status-cell { 
+            min-width: auto;
+            width: 100%;
+            text-align: center; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .countdown { 
+            color: var(--danger-red); 
+            font-weight: bold; 
+            font-size: 3rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(217, 83, 79, 0.1);
+            border-radius: 8px;
+            min-width: 120px;
+            text-align: center;
+        }
+        
+        .departed-circle { 
+            display: inline-block; 
+            width: 60px; 
+            height: 60px; 
+            background-color: var(--success-green); 
+            border-radius: 50%; 
+            cursor: default;
+            box-shadow: 0 2px 8px rgba(92, 184, 92, 0.4);
+        }
+        
         .bottom-row { background-color: #f7f7f7; padding: 0.8rem; border-radius: 4px; flex-direction: row; justify-content: space-between; }
         
-        /* Dark mode bottom row */
         body.dark-mode .bottom-row {
             background-color: #1f1f1f;
         }
         
         .time-group { display: flex; align-items: center; gap: 0.5rem; }
-        .time-label { color: #555; font-size: 1rem; }
         
-        /* Dark mode time label */
+        .time-label { 
+            color: #555; 
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
         body.dark-mode .time-label {
             color: #aaa;
         }
         
-        .time-display { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; }
+        .time-display { 
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
         
-        /* Unified button styles for modal and control buttons */
         .time-adj-btn,
         #rangeStartBtn,
         #rangeEndBtn,
@@ -156,14 +198,14 @@
         }
         
         .time-adj-btn {
-            width: 35px;
-            height: 35px;
+            width: 45px;
+            height: 45px;
             padding: 0;
             border-radius: 50%;
-            font-size: 18px;
+            font-size: 22px;
+            font-weight: bold;
         }
         
-        /* Dark mode button styles */
         body.dark-mode .time-adj-btn,
         body.dark-mode #rangeStartBtn,
         body.dark-mode #rangeEndBtn,
@@ -203,7 +245,6 @@
         .modal-overlay.visible { opacity: 1; visibility: visible; }
         .modal-content { background: white; padding: 1.5rem; border-radius: 8px; width: 95%; max-width: none; }
         
-        /* Dark mode modal */
         body.dark-mode .modal-content {
             background: var(--bg-secondary);
             color: var(--text-primary);
@@ -223,7 +264,6 @@
         .modal-station-list button { padding: 0.6rem; border: 1px solid #ddd; border-radius: 6px; background: #f7f7f7; font-size: 1rem; }
         .modal-station-list button.is-favorite { border-color: #ff6b81; background: #fff0f3; }
         
-        /* Dark mode modal station list */
         body.dark-mode .modal-station-list button {
             background: #3a3a3a;
             border-color: #555;
@@ -238,18 +278,55 @@
         .control-inline { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
         .control-inline .label { font-weight: 600; color: #333; font-size: 1.2rem; }
         
-        /* Dark mode control inline label */
         body.dark-mode .label,
         body.dark-mode .control-inline .label {
             color: var(--text-primary);
         }
         
-        @media (max-width: 480px) { body { padding: 0.3rem; } h1 { font-size: 1.4rem; } .station-name { font-size: 1.4rem; } .bottom-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; } }
+        @media (max-width: 480px) { 
+            body { padding: 0.3rem; } 
+            h1 { font-size: 1.4rem; } 
+            .station-name { font-size: 2.2rem; }
+            .countdown { font-size: 2.5rem; }
+            .departed-circle { width: 50px; height: 50px; }
+            .bottom-row { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            .time-display { font-size: 1.3rem; }
+            .time-label { font-size: 1.1rem; }
+        }
+        
+        @media (max-width: 300px) {
+            .container { padding: 0.5rem; }
+            h1 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+            .station-item { padding: 1rem 0.5rem; margin-bottom: 0.8rem; }
+            .station-name { font-size: 1.8rem; }
+            .countdown { font-size: 2rem; padding: 0.3rem 0.8rem; min-width: 100px; }
+            .departed-circle { width: 45px; height: 45px; }
+            .time-adj-btn { width: 40px; height: 40px; font-size: 18px; }
+            .time-display { font-size: 1.2rem; }
+            .time-label { font-size: 1rem; }
+            .control-item label, .control-item .label { font-size: 1rem; }
+        }
+        
         .scroll-buttons { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
-        .scroll-btn { width: 40px; height: 40px; background-color: rgba(0, 51, 102, 0.8); color: white; border: none; border-radius: 50%; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: background-color 0.2s; }
+        
+        .scroll-btn { 
+            width: 50px; 
+            height: 50px; 
+            background-color: rgba(0, 51, 102, 0.8); 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            font-size: 24px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+            transition: background-color 0.2s;
+            font-weight: bold;
+        }
         .scroll-btn:active { background-color: var(--tra-blue); }
         
-        /* Dark mode scroll buttons */
         body.dark-mode .scroll-btn {
             background-color: rgba(74, 144, 226, 0.8);
         }
@@ -285,7 +362,6 @@
                 <label for="simpleModeToggle" class="label">簡潔模式</label>
                 <label class="toggle-switch"> <input type="checkbox" id="simpleModeToggle"> <span class="slider"></span> </label>
             </div>
-            <!-- Added dark mode toggle -->
             <div class="control-item">
                 <label for="darkModeToggle" class="label">暗光模式</label>
                 <label class="toggle-switch"> <input type="checkbox" id="darkModeToggle"> <span class="slider"></span> </label>
@@ -309,13 +385,14 @@
     <div id="globalNoteModal" class="modal-overlay"></div>
 
     <div class="scroll-buttons">
-        <button id="scrollTopBtn" class="scroll-btn" title="回到頂部">頂</button>
-        <button id="scrollToNextBtn" class="scroll-btn" title="到下一站">倒</button>
-        <button id="openFavoritesBtn" class="scroll-btn" title="愛心旅客">❤️</button>
+        <button id="scrollTopBtn" class="scroll-btn" title="回到頂部">🔼</button>
+        <button id="scrollToNextBtn" class="scroll-btn" title="到下一站">🔽</button>
+  
     </div>
 
     <script>
-        alert("<免責聲名>工具始終只是輔助，如有提早或未確認號誌即開車之情事發生，與開發者無關。祝各位師傅跑車平安順風！");
+        //alert("<免責聲名>工具始終只是輔助，如有提早開車或其他情事發生，與開發者無關。祝各位師傅跑車平安順風！");//
+      //<button id="openFavoritesBtn" class="scroll-btn" title="愛心旅客">❤️</button>//
         const APP_ID = ''; // 請填入您的 TDX App ID
         const APP_KEY = ''; // 請填入您的 TDX App Key
 
@@ -324,7 +401,7 @@
         const resultDiv = document.getElementById('result');
         const controlsDiv = document.getElementById('controls');
         const simpleModeToggle = document.getElementById('simpleModeToggle');
-        const darkModeToggle = document.getElementById('darkModeToggle'); // Added dark mode toggle reference
+        const darkModeToggle = document.getElementById('darkModeToggle'); 
         const hideDepartedToggle = document.getElementById('hideDepartedToggle');
         const rangeStartBtn = document.getElementById('rangeStartBtn');
         const rangeEndBtn = document.getElementById('rangeEndBtn');
@@ -333,10 +410,11 @@
         
         let countdownInterval;
         let stationData = [];
+        let cachedStatusCells = []; 
         let stationNotes = {};
         let manualHiddenUpTo = 0;
-        let rangeStartIndex = null; // 起站索引
-        let rangeEndIndex = null;   // 迄站索引
+        let rangeStartIndex = null; 
+        let rangeEndIndex = null;   
         let favoriteStationIndices = new Set();
         let globalNote = '';
 
@@ -363,6 +441,18 @@
         rangeStartBtn.addEventListener('click', () => openStationPicker('start'));
         rangeEndBtn.addEventListener('click', () => openStationPicker('end'));
         openGlobalNoteBtn.addEventListener('click', openGlobalNoteModal);
+        
+        // Page Visibility API
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+            } else {
+                startCountdown();
+            }
+        });
 
         async function fetchTimetable() {
             const trainNo = trainNoInput.value.trim();
@@ -389,16 +479,53 @@
                 
                 let lastDepartureTime = null;
                 let dayOffset = 0;
-                stationData = data[0].StopTimes.map(stop => {
+                
+                stationData = data[0].StopTimes.map((stop, index, arr) => {
+                    // 判斷跨日
                     if (lastDepartureTime && stop.DepartureTime < lastDepartureTime) {
                         dayOffset++;
                     }
                     lastDepartureTime = stop.DepartureTime;
+                    
+                    // 標準化時間字串 (補:00)
+                    let timeStr = stop.DepartureTime;
+                    if (timeStr.split(':').length === 2) timeStr += ':00';
+                    
+                    let arrTimeStr = stop.ArrivalTime;
+                    if (arrTimeStr.split(':').length === 2) arrTimeStr += ':00';
+                    
+                    // *** 關鍵修改：保存「絕對原始」的出發時間 (未被自動加時過的) ***
+                    const rawDepartureTime = timeStr; // 這個值將用於計算按鈕限制的基準
+
+                    // *** 自動加時邏輯 ***
+                    if (index > 0 && index < arr.length - 1) {
+                        if (timeStr === arrTimeStr) {
+                            const [th, tm, ts] = timeStr.split(':').map(Number);
+                            const d = new Date(2000, 0, 1, th, tm, ts);
+                            const originalDay = d.getDate();
+                            d.setSeconds(d.getSeconds() + 30);
+                            
+                            if (d.getDate() !== originalDay) {
+                                dayOffset++;
+                            }
+                            
+                            const nh = String(d.getHours()).padStart(2, '0');
+                            const nm = String(d.getMinutes()).padStart(2, '0');
+                            const ns = String(d.getSeconds()).padStart(2, '0');
+                            timeStr = `${nh}:${nm}:${ns}`;
+                        }
+                    }
+                    // *** 結束自動加時 ***
+
+                    const [h, m, s] = timeStr.split(':').map(Number); // 使用最終顯示的時間解析
+
                     return {
                         ...stop,
-                        ArrivalTime: stop.ArrivalTime + ':00',
-                        DepartureTime: stop.DepartureTime + ':00',
-                        dayOffset: dayOffset
+                        ArrivalTime: arrTimeStr,
+                        DepartureTime: timeStr, // 這是顯示在畫面上，可能已經+30s的時間
+                        RawDepartureTime: rawDepartureTime, // 這是絕對原始時間，用來擋住手動按鈕
+                        dayOffset: dayOffset,
+                        _parsedTime: { h, m, s }
                     };
                 });
 
@@ -416,8 +543,10 @@
         function displayTimetable(stopTimes) {
             let listHTML = `<ul class="station-list">`;
             stopTimes.forEach((stop, index) => {
+                // 注意：這裡 data-original-departure-time 改用 stop.RawDepartureTime
+                // 這樣 adjustTime 函式就會以「完全未修改的時間」當作基準
                 listHTML += `
-                    <li class="station-item" id="station-item-${index}" data-index="${index}" data-original-departure-time="${stop.DepartureTime}">
+                    <li class="station-item" id="station-item-${index}" data-index="${index}" data-original-departure-time="${stop.RawDepartureTime}">
                         <div class="top-row">
                             <div class="station-header">
                                 <span class="station-name" data-index="${index}">${stop.StationName.Zh_tw}</span>
@@ -439,6 +568,8 @@
             resultDiv.innerHTML = listHTML;
             document.getElementById('noteModal').innerHTML = `<div class="modal-content"><h3 id="modalStationName" class="modal-title"></h3><textarea id="noteTextarea" placeholder="請在此輸入備註..."></textarea><div class="modal-actions"><button id="closeNoteBtn">取消</button><button id="saveNoteBtn">儲存</button></div></div>`;
             
+            cachedStatusCells = Array.from(document.querySelectorAll('.status-cell'));
+
             attachEventListeners();
             for (let i = 0; i < stationData.length; i++) {
                 updateStationSymbols(i);
@@ -450,7 +581,7 @@
         function attachEventListeners() {
             document.querySelectorAll('.station-item').forEach(item => {
                 item.addEventListener('click', (e) => {
-                    if (e.target.closest('button')) return; // Removed station-name check to disable click-to-note
+                    if (e.target.closest('button')) return; 
                     document.querySelectorAll('.station-item').forEach(i => i.classList.remove('highlighted-station'));
                     item.classList.add('highlighted-station');
                 });
@@ -459,7 +590,6 @@
             document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
             document.getElementById('closeNoteBtn').addEventListener('click', closeModal);
             document.getElementById('noteModal').addEventListener('click', (e) => { if(e.target.id === 'noteModal') closeModal(); });
-            // station picker & favorites & global note overlay close handlers
             document.getElementById('stationPickerModal').addEventListener('click', (e) => { if(e.target.id === 'stationPickerModal') closeStationPickerModal(); });
             document.getElementById('favoritesModal').addEventListener('click', (e) => { if(e.target.id === 'favoritesModal') closeFavoritesModal(); });
             document.getElementById('globalNoteModal').addEventListener('click', (e) => { if(e.target.id === 'globalNoteModal') closeGlobalNoteModal(); });
@@ -473,39 +603,42 @@
         
         function updateCountdown() {
             const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const nowTime = now.getTime();
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            
             let nextUpcomingStationIndex = -1;
+            let diffSeconds = 0;
 
             for (let i = 0; i < stationData.length; i++) {
                 const stop = stationData[i];
-                const departureTimeStr = document.getElementById(`status-${i}`)?.dataset.departureTime;
-                if (!departureTimeStr) continue;
-                const departureDateTime = new Date(today);
-                departureDateTime.setDate(today.getDate() + stop.dayOffset);
-                const [h, m, s] = departureTimeStr.split(':');
-                departureDateTime.setHours(h, m, s);
-                if (departureDateTime > now) { nextUpcomingStationIndex = i; break; }
+                const targetTime = todayStart + (stop.dayOffset * 86400000) + 
+                                   (stop._parsedTime.h * 3600000) + 
+                                   (stop._parsedTime.m * 60000) + 
+                                   (stop._parsedTime.s * 1000);
+                
+                if (targetTime > nowTime) {
+                    nextUpcomingStationIndex = i;
+                    diffSeconds = Math.round((targetTime - nowTime) / 1000);
+                    break;
+                }
             }
 
-            document.querySelectorAll('.status-cell').forEach((cell, index) => {
-                const item = document.getElementById(`station-item-${index}`);
-                if (item.style.display === 'none') { cell.innerHTML = ''; return; }
-                const stop = stationData[index];
-                const departureTimeStr = cell.dataset.departureTime;
-                const departureDateTime = new Date(today);
-                departureDateTime.setDate(today.getDate() + stop.dayOffset);
-                const [h, m, s] = departureTimeStr.split(':');
-                departureDateTime.setHours(h, m, s);
-                const diffSeconds = Math.round((departureDateTime - now) / 1000);
-                if (diffSeconds > 0) {
-                    if (index === nextUpcomingStationIndex) {
-                        cell.innerHTML = `<span class="countdown">${diffSeconds}s</span>`;
-                    } else { cell.innerHTML = ''; }
+            cachedStatusCells.forEach((cell, index) => {
+                let newHtml = '';
+                if (index === nextUpcomingStationIndex) {
+                    newHtml = `<span class="countdown">${diffSeconds}s</span>`;
+                } else if (index < nextUpcomingStationIndex || (nextUpcomingStationIndex === -1 && index < stationData.length)) {
+                    newHtml = `<div class="departed-circle" title="已出發"></div>`;
                 } else {
-                    cell.innerHTML = `<div class="departed-circle" title="已出發"></div>`;
+                    newHtml = '';
+                }
+
+                if (cell.innerHTML !== newHtml) {
+                    cell.innerHTML = newHtml;
                 }
             });
-            updateVisibility();
+
+            updateVisibility(nextUpcomingStationIndex);
         }
         
         function adjustTime(event) {
@@ -513,18 +646,23 @@
             const btn = event.currentTarget;
             const op = parseInt(btn.dataset.op, 10);
             const item = btn.closest('.station-item');
-            const index = item.dataset.index;
+            const index = parseInt(item.dataset.index, 10);
             const timeSpan = document.getElementById(`departure-time-${index}`);
             
+            // 這裡的 dataset.originalDepartureTime 現在是 RawDepartureTime (絕對原始時間)
             const originalTimeStr = item.dataset.originalDepartureTime;
             const [origH, origM, origS] = originalTimeStr.split(':').map(Number);
             const originalDate = new Date(0, 0, 0, origH, origM, origS);
+            
+            // 上限設定為「絕對原始時間」+ 30秒
             const maxDate = new Date(originalDate.getTime() + 30000);
 
             const [h, m, s] = timeSpan.textContent.split(':').map(Number);
             const currentDate = new Date(0, 0, 0, h, m, s);
             const newDate = new Date(currentDate.getTime() + (op * 30000));
 
+            // 如果自動加時已經到了 12:00:30，這裡檢查 12:01:00 > 12:00:30 (maxDate)，就會被擋下。
+            // 如果按減號，12:00:00 >= 12:00:00 (originalDate)，允許。
             if (newDate > maxDate || newDate < originalDate) {
                 btn.style.transform = 'scale(0.9)'; setTimeout(() => { btn.style.transform = ''; }, 100);
                 return;
@@ -533,33 +671,52 @@
             const newTime = `${String(newDate.getHours()).padStart(2, '0')}:${String(newDate.getMinutes()).padStart(2, '0')}:${String(newDate.getSeconds()).padStart(2, '0')}`;
             timeSpan.textContent = newTime;
             document.getElementById(`status-${index}`).dataset.departureTime = newTime;
+            
+            if (stationData[index]) {
+                stationData[index].DepartureTime = newTime;
+                stationData[index]._parsedTime = {
+                    h: newDate.getHours(),
+                    m: newDate.getMinutes(),
+                    s: newDate.getSeconds()
+                };
+            }
+
             updateCountdown();
             saveToLocal();
         }
 
-        function updateVisibility() {
-            const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            let nextUpcomingStationIndex = -1;
+        function updateVisibility(cachedNextIndex) {
+            let nextUpcomingStationIndex = cachedNextIndex;
+            
+            if (nextUpcomingStationIndex === undefined) {
+                const now = new Date();
+                const nowTime = now.getTime();
+                const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+                nextUpcomingStationIndex = -1;
 
-            for (let i = 0; i < stationData.length; i++) {
-                const stop = stationData[i];
-                const departureTimeStr = document.getElementById(`status-${i}`)?.dataset.departureTime;
-                if (!departureTimeStr) continue;
-                const departureDateTime = new Date(today);
-                departureDateTime.setDate(today.getDate() + stop.dayOffset);
-                const [h, m, s] = departureTimeStr.split(':');
-                departureDateTime.setHours(h, m, s);
-                if (departureDateTime > now) { nextUpcomingStationIndex = i; break; }
+                for (let i = 0; i < stationData.length; i++) {
+                    const stop = stationData[i];
+                    const targetTime = todayStart + (stop.dayOffset * 86400000) + 
+                                       (stop._parsedTime.h * 3600000) + 
+                                       (stop._parsedTime.m * 60000) + 
+                                       (stop._parsedTime.s * 1000);
+                    if (targetTime > nowTime) { nextUpcomingStationIndex = i; break; }
+                }
             }
 
             const [rangeStart, rangeEnd] = computeRangeBounds();
             const hiddenUpTo = hideDepartedToggle.checked ? (nextUpcomingStationIndex !== -1 ? nextUpcomingStationIndex : stationData.length) : -1;
+            
             document.querySelectorAll('.station-item').forEach(item => {
                 const idx = parseInt(item.dataset.index);
                 const outsideRange = idx < rangeStart || idx > rangeEnd;
                 const isDepartedHidden = hideDepartedToggle.checked && idx < hiddenUpTo;
-                item.style.display = (outsideRange || isDepartedHidden) ? 'none' : 'block';
+                const shouldHide = outsideRange || isDepartedHidden;
+                
+                const newDisplay = shouldHide ? 'none' : 'block';
+                if (item.style.display !== newDisplay) {
+                    item.style.display = newDisplay;
+                }
             });
         }
 
@@ -567,6 +724,8 @@
             const adjustedTimes = {};
             document.querySelectorAll('.departure-time').forEach(el => {
                 const index = el.id.split('-')[2];
+                // 儲存時，只比較是否跟「絕對原始時間」不同
+                // 注意：這表示如果你把自動+30s的調回原始，就不會被存為變更
                 if (el.textContent !== document.getElementById(`station-item-${index}`).dataset.originalDepartureTime) {
                     adjustedTimes[index] = el.textContent;
                 }
@@ -576,7 +735,7 @@
                 notes: stationNotes,
                 times: adjustedTimes,
                 simple: simpleModeToggle.checked,
-                darkMode: darkModeToggle.checked, // Added dark mode to state
+                darkMode: darkModeToggle.checked, 
                 hideDeparted: hideDepartedToggle.checked,
                 rangeStartIndex: rangeStartIndex,
                 rangeEndIndex: rangeEndIndex,
@@ -610,7 +769,7 @@
                 notes: stationNotes,
                 times: adjustedTimes,
                 simple: simpleModeToggle.checked,
-                darkMode: darkModeToggle.checked, // Added dark mode to local storage
+                darkMode: darkModeToggle.checked, 
                 hideDeparted: hideDepartedToggle.checked,
                 rangeStartIndex: rangeStartIndex,
                 rangeEndIndex: rangeEndIndex,
@@ -618,6 +777,16 @@
                 globalNote: globalNote
             };
             localStorage.setItem('trainAssistantState', JSON.stringify(state));
+        }
+        
+        function syncStationDataTime(index, timeStr) {
+            if (stationData && stationData[index]) {
+                let formattedTime = timeStr;
+                if (formattedTime.split(':').length === 2) formattedTime += ':00';
+                stationData[index].DepartureTime = formattedTime;
+                const [h, m, s] = formattedTime.split(':').map(Number);
+                stationData[index]._parsedTime = { h, m, s };
+            }
         }
 
         function loadStateFromHash() {
@@ -628,13 +797,20 @@
                     const state = JSON.parse(json);
                     trainNoInput.value = state.trainNo;
                     simpleModeToggle.checked = state.simple;
-                    darkModeToggle.checked = state.darkMode || false; // Load dark mode state
-                    document.body.classList.toggle('dark-mode', darkModeToggle.checked); // Apply dark mode
+                    darkModeToggle.checked = state.darkMode || false; 
+                    document.body.classList.toggle('dark-mode', darkModeToggle.checked); 
                     hideDepartedToggle.checked = state.hideDeparted;
                     fetchTimetable().then(success => {
                         if (success) {
                             stationNotes = state.notes || {};
-                            Object.entries(state.times || {}).forEach(([index, time]) => { const timeEl = document.getElementById(`departure-time-${index}`); if (timeEl) { timeEl.textContent = time; document.getElementById(`status-${index}`).dataset.departureTime = time; } });
+                            Object.entries(state.times || {}).forEach(([index, time]) => { 
+                                const timeEl = document.getElementById(`departure-time-${index}`); 
+                                if (timeEl) { 
+                                    timeEl.textContent = time; 
+                                    document.getElementById(`status-${index}`).dataset.departureTime = time; 
+                                    syncStationDataTime(index, time); 
+                                } 
+                            });
                             rangeStartIndex = (typeof state.rangeStartIndex === 'number') ? state.rangeStartIndex : null;
                             rangeEndIndex = (typeof state.rangeEndIndex === 'number') ? state.rangeEndIndex : null;
                             favoriteStationIndices = new Set((state.favorites || []).filter((v) => typeof v === 'number'));
@@ -660,14 +836,21 @@
                     const state = JSON.parse(storedState);
                     trainNoInput.value = state.trainNo || '';
                     simpleModeToggle.checked = state.simple || false;
-                    darkModeToggle.checked = state.darkMode || false; // Load dark mode state
-                    document.body.classList.toggle('dark-mode', darkModeToggle.checked); // Apply dark mode
+                    darkModeToggle.checked = state.darkMode || false; 
+                    document.body.classList.toggle('dark-mode', darkModeToggle.checked); 
                     hideDepartedToggle.checked = state.hideDeparted || false;
                     if (state.trainNo) {
                         fetchTimetable().then(success => {
                             if (success) {
                                 stationNotes = state.notes || {};
-                                Object.entries(state.times || {}).forEach(([index, time]) => { const timeEl = document.getElementById(`departure-time-${index}`); if (timeEl) { timeEl.textContent = time; document.getElementById(`status-${index}`).dataset.departureTime = time; } });
+                                Object.entries(state.times || {}).forEach(([index, time]) => { 
+                                    const timeEl = document.getElementById(`departure-time-${index}`); 
+                                    if (timeEl) { 
+                                        timeEl.textContent = time; 
+                                        document.getElementById(`status-${index}`).dataset.departureTime = time; 
+                                        syncStationDataTime(index, time);
+                                    } 
+                                });
                                 rangeStartIndex = (typeof state.rangeStartIndex === 'number') ? state.rangeStartIndex : null;
                                 rangeEndIndex = (typeof state.rangeEndIndex === 'number') ? state.rangeEndIndex : null;
                                 favoriteStationIndices = new Set((state.favorites || []).filter((v) => typeof v === 'number'));
@@ -710,7 +893,7 @@
             rangeEndBtn.textContent = (typeof rangeEndIndex === 'number') ? stationData[rangeEndIndex].StationName.Zh_tw : '迄站';
         }
 
-        function openStationPicker(mode) { // mode: 'start' | 'end'
+        function openStationPicker(mode) { 
             if (!stationData || stationData.length === 0) return;
             const modal = document.getElementById('stationPickerModal');
             const [startBound, endBound] = [0, stationData.length - 1];
@@ -738,7 +921,6 @@
                     if (mode === 'start') { rangeStartIndex = idx; }
                     else { rangeEndIndex = idx; }
                     if (typeof rangeStartIndex === 'number' && typeof rangeEndIndex === 'number' && rangeStartIndex > rangeEndIndex) {
-                        // 保持 start <= end
                         const t = rangeStartIndex; rangeStartIndex = rangeEndIndex; rangeEndIndex = t;
                     }
                     updateRangeButtonsLabel();
@@ -787,7 +969,6 @@
                 btn.addEventListener('click', () => {
                     const idx = parseInt(btn.dataset.index, 10);
                     toggleFavoriteForIndex(idx);
-                    // refresh current button UI
                     const isFav = favoriteStationIndices.has(idx);
                     btn.classList.toggle('is-favorite', isFav);
                     btn.textContent = stationData[idx].StationName.Zh_tw + (isFav ? ' ❤️' : '');
