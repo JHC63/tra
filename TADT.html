@@ -387,12 +387,10 @@
     <div class="scroll-buttons">
         <button id="scrollTopBtn" class="scroll-btn" title="回到頂部">🔼</button>
         <button id="scrollToNextBtn" class="scroll-btn" title="到下一站">🔽</button>
-  
     </div>
 
     <script>
         //alert("<免責聲名>工具始終只是輔助，如有提早開車或其他情事發生，與開發者無關。祝各位師傅跑車平安順風！");//
-      //<button id="openFavoritesBtn" class="scroll-btn" title="愛心旅客">❤️</button>//
         const APP_ID = ''; // 請填入您的 TDX App ID
         const APP_KEY = ''; // 請填入您的 TDX App Key
 
@@ -406,7 +404,8 @@
         const rangeStartBtn = document.getElementById('rangeStartBtn');
         const rangeEndBtn = document.getElementById('rangeEndBtn');
         const openGlobalNoteBtn = document.getElementById('openGlobalNoteBtn');
-        const openFavoritesBtn = document.getElementById('openFavoritesBtn');
+        
+        // 已移除 openFavoritesBtn 的變數定義
         
         let countdownInterval;
         let stationData = [];
@@ -437,7 +436,9 @@
                 nextStation.closest('.station-item').scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
-        openFavoritesBtn.addEventListener('click', openFavoritesModal);
+        
+        // 已移除 openFavoritesBtn 的事件監聽
+        
         rangeStartBtn.addEventListener('click', () => openStationPicker('start'));
         rangeEndBtn.addEventListener('click', () => openStationPicker('end'));
         openGlobalNoteBtn.addEventListener('click', openGlobalNoteModal);
