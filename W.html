@@ -2,21 +2,22 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <!-- Viewport：針對手錶優化，禁止縮放 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
-    <title>TRA Watch Final</title>
+    <title>TRA Watch A</title>
     
     <style>
         :root {
-            /* 全域色彩 (True Black 省電) */
             --bg-color: #000000;
             --text-white: #FFFFFF;
-            --text-gray: #888888;
-            --color-blue: #0A84FF;   /* 時間 */
-            --color-green: #32D74B;  /* > 60s */
-            --color-yellow: #FFD60A; /* < 60s */
-            --color-red: #FF453A;    /* < 10s (不閃爍) */
+            --text-gray: #aaaaaa;
+            --color-blue: #0A84FF;
+            --color-green: #32D74B;
+            --color-yellow: #FFD60A;
+            --color-red: #FF453A;
+            
+            /* 定義輸入框高度 */
+            --header-height: 45px;
         }
 
         body {
@@ -25,32 +26,32 @@
             font-family: -apple-system, "SF Compact", "Roboto", sans-serif;
             margin: 0;
             padding: 0;
-            height: 100vh;
+            height: 100svh; /* 使用 svh 適應手錶瀏覽器 */
             width: 100vw;
-            overflow: hidden; /* 隱藏外層捲軸 */
+            overflow: hidden;
         }
 
-        /* --- 頂部輸入區 (懸浮) --- */
+        /* --- 固定置頂輸入區 (方案 A) --- */
         #header-input {
             position: fixed;
             top: 0; left: 0; width: 100%;
-            height: 45px;
-            background: rgba(0, 0, 0, 0.8); /* 半透明黑 */
+            height: var(--header-height);
+            background: #111; /* 深灰色背景區隔 */
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 5px;
             z-index: 999;
-            backdrop-filter: blur(5px);
-            border-bottom: 1px solid #222;
+            border-bottom: 1px solid #333;
+            box-sizing: border-box;
         }
 
         input {
-            background: #1c1c1e;
+            background: #000;
             border: 1px solid #444;
             color: #fff;
             width: 70px;
-            border-radius: 8px;
+            border-radius: 6px;
             text-align: center;
             font-size: 18px;
             height: 32px;
@@ -61,80 +62,82 @@
             background: var(--color-blue);
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-weight: bold;
             font-size: 16px;
             padding: 0 15px;
             height: 32px;
         }
 
-        /* --- 核心容器 (Scroll Snap) --- */
+        /* --- 核心容器 --- */
         #snap-container {
-            height: 100vh;
+            /* 讓容器往下推，避開 Header */
+            margin-top: var(--header-height);
+            /* 高度 = 螢幕總高 - Header 高度 */
+            height: calc(100svh - var(--header-height));
+            
             width: 100%;
-            overflow-y: scroll;     /* 允許垂直滑動 */
-            scroll-snap-type: y mandatory; /* 強制吸附 */
-            scroll-behavior: smooth; /* 平滑捲動 */
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
         }
 
         /* 卡片設計 */
         .station-card {
-            height: 100vh;
+            /* 卡片高度也要減去 Header 高度，確保一頁剛好塞滿剩下空間 */
+            height: calc(100svh - var(--header-height));
             width: 100%;
-            scroll-snap-align: start; /* 對齊頂部 */
+            
+            scroll-snap-align: start;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             border-bottom: 1px solid #111;
             box-sizing: border-box;
-            padding: 10px;
+            position: relative;
         }
 
-        /* --- 視覺元件 (vmin 動態縮放) --- */
+        /* --- 視覺元件 (字體微調適應縮小的空間) --- */
         
-        /* 站名 */
         .st-name {
-            font-size: 18vmin;
+            font-size: 16vmin;
             font-weight: bold;
-            margin-bottom: 2vmin;
+            margin-bottom: 0.5vmin; /* 縮小間距 */
             text-align: center;
+            line-height: 1.1;
         }
 
-        /* 標籤 */
         .st-label {
-            font-size: 5vmin;
+            font-size: 4.5vmin;
             color: var(--text-gray);
-            margin-bottom: 1vmin;
+            margin-bottom: 0;
         }
 
-        /* 開車時間 (等寬字體) */
         .st-time {
             font-family: "Courier New", monospace;
-            font-size: 13vmin;
+            font-size: 12vmin;
             color: var(--color-blue);
             font-weight: bold;
             letter-spacing: -1px;
-            margin-bottom: 4vmin;
+            margin-bottom: 2vmin;
         }
 
-        /* 倒數計時 */
         .st-countdown {
             font-family: "Courier New", monospace;
-            font-size: 28vmin;
+            font-size: 26vmin;
             font-weight: bold;
             line-height: 1;
-            margin-top: 2vmin;
+            margin-top: 1vmin;
         }
 
         /* 狀態顏色 */
         .status-safe { color: var(--color-green); }
         .status-ready { color: var(--color-yellow); }
-        .status-urgent { color: var(--color-red); } /* 靜態紅，不閃爍 */
+        .status-urgent { color: var(--color-red); }
 
-        /* 提示訊息 */
         .msg-box {
-            height: 100vh;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -142,14 +145,13 @@
             color: #666;
             font-size: 5vmin;
             text-align: center;
-            gap: 10px;
         }
 
     </style>
 </head>
 <body>
 
-    <!-- 頂部輸入區 -->
+    <!-- 固定置頂輸入區 -->
     <div id="header-input">
         <input type="number" id="trainNoInput" placeholder="車次" inputmode="numeric">
         <button id="searchBtn">GO</button>
@@ -163,55 +165,42 @@
     </div>
 
     <script>
-        // --- DOM 元素 ---
         const input = document.getElementById('trainNoInput');
         const searchBtn = document.getElementById('searchBtn');
         const container = document.getElementById('snap-container');
 
-        // --- 變數 ---
         let stationData = [];
         let timerInterval;
-        let currentFocusIndex = -1; // 用來控制自動捲動，避免重複觸發
+        let currentFocusIndex = -1;
 
         // --- 初始化：讀取暫存 ---
         window.addEventListener('load', () => {
             const savedTrain = localStorage.getItem('watch_train_no');
             const savedData = localStorage.getItem('watch_train_data');
             
-            if (savedTrain) {
-                input.value = savedTrain;
-            }
+            if (savedTrain) input.value = savedTrain;
 
-            // 如果有離線資料，直接載入顯示，不用等網路
             if (savedData) {
                 try {
-                    const parsedData = JSON.parse(savedData);
-                    console.log("讀取離線資料成功");
-                    processData(parsedData, false); // false = 不用再存一次
-                } catch (e) {
-                    console.error("離線資料損毀", e);
-                }
+                    processData(JSON.parse(savedData), false);
+                } catch (e) {}
             }
         });
 
         searchBtn.addEventListener('click', fetchTimetable);
 
-        // --- 查詢邏輯 (訪客模式) ---
         async function fetchTimetable() {
             const trainNo = input.value.trim();
             if(!trainNo) return;
-
-            // 存車次
             localStorage.setItem('watch_train_no', trainNo);
 
             container.innerHTML = `<div class="msg-box">網路查詢中...</div>`;
             if(timerInterval) clearInterval(timerInterval);
 
-            // TDX API (訪客直接連線)
             const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/DailyTimetable/Today/TrainNo/${trainNo}?%24format=JSON`;
 
             try {
-                const res = await fetch(apiUrl); // 無 Headers
+                const res = await fetch(apiUrl);
                 if (!res.ok) throw new Error("API Error");
                 
                 const data = await res.json();
@@ -220,24 +209,19 @@
                     return;
                 }
 
-                // 網路查詢成功，更新資料並存檔
                 processData(data[0].StopTimes, true);
 
             } catch(e) {
-                // 失敗時，嘗試讀取暫存
                 const savedData = localStorage.getItem('watch_train_data');
                 if (savedData) {
                     processData(JSON.parse(savedData), false);
-                    alert("網路失敗，已載入離線資料");
                 } else {
                     container.innerHTML = `<div class="msg-box">連線失敗<br>無離線資料</div>`;
                 }
             }
         }
 
-        // --- 資料處理 (+30秒規則) ---
         function processData(stopTimes, saveToCache) {
-            // 如果需要存檔
             if (saveToCache) {
                 localStorage.setItem('watch_train_data', JSON.stringify(stopTimes));
             }
@@ -246,35 +230,27 @@
             let dayOffset = 0;
 
             stationData = stopTimes.map((stop, index, arr) => {
-                // 跨日判斷
-                if (lastDepartureTime && stop.DepartureTime < lastDepartureTime) {
-                    dayOffset++;
-                }
+                if (lastDepartureTime && stop.DepartureTime < lastDepartureTime) dayOffset++;
                 lastDepartureTime = stop.DepartureTime;
 
-                // 補齊秒數 (API 有時只給 HH:mm)
                 let depTimeStr = stop.DepartureTime.length === 5 ? stop.DepartureTime + ":00" : stop.DepartureTime;
                 let arrTimeStr = stop.ArrivalTime.length === 5 ? stop.ArrivalTime + ":00" : stop.ArrivalTime;
 
-                // --- 核心規則 ---
-                // 始發(index 0) 與 終點(index length-1) 不加
-                // 中間站若 "到" == "開"，則開車時間 +30秒
                 const isOrigin = (index === 0);
                 const isTerminal = (index === arr.length - 1);
                 
-                // 轉為 Date 物件計算
                 let finalDepDate = parseTime(depTimeStr, dayOffset);
 
+                // +30秒邏輯
                 if (!isOrigin && !isTerminal && depTimeStr === arrTimeStr) {
                     finalDepDate.setSeconds(finalDepDate.getSeconds() + 30);
-                    // 更新顯示字串
                     depTimeStr = formatTime(finalDepDate);
                 }
 
                 return {
                     name: stop.StationName.Zh_tw,
-                    depTimeStr: depTimeStr, // 字串: 10:00:30
-                    depDate: finalDepDate,  // 物件: 用於倒數
+                    depTimeStr: depTimeStr,
+                    depDate: finalDepDate,
                     index: index
                 };
             });
@@ -283,7 +259,6 @@
             startTimer();
         }
 
-        // --- 時間輔助函式 ---
         function parseTime(timeStr, dayOffset) {
             const now = new Date();
             const [h, m, s] = timeStr.split(':').map(Number);
@@ -299,7 +274,6 @@
             return `${h}:${m}:${s}`;
         }
 
-        // --- 畫面渲染 (Scroll Snap) ---
         function renderCards() {
             let html = '';
             stationData.forEach((st, i) => {
@@ -314,22 +288,17 @@
             container.innerHTML = html;
         }
 
-        // --- 倒數計時與自動導航 ---
         function startTimer() {
             if(timerInterval) clearInterval(timerInterval);
             updateTimer();
-            // 提高頻率至 200ms，確保切換更即時
             timerInterval = setInterval(updateTimer, 200); 
         }
 
         function updateTimer() {
             const now = new Date();
-            
-            // 邏輯：找出第一個「開車時間 > 現在」的車站
             let nextStationIndex = -1;
             
             for(let i=0; i<stationData.length; i++) {
-                // 剩餘秒數
                 const diff = (stationData[i].depDate - now) / 1000;
                 if (diff > 0) {
                     nextStationIndex = i;
@@ -337,13 +306,11 @@
                 }
             }
 
-            // 如果全部跑完 (diff 都在 0 以下)，停留在最後一站
             if (nextStationIndex === -1 && stationData.length > 0) {
                 nextStationIndex = stationData.length - 1;
             }
 
-            // --- 自動換頁 (Auto Scroll) ---
-            // 當目標索引改變時，立刻滑動
+            // 自動換頁邏輯
             if (nextStationIndex !== currentFocusIndex) {
                 const targetCard = document.getElementById(`card-${nextStationIndex}`);
                 if (targetCard) {
@@ -352,36 +319,27 @@
                 }
             }
 
-            // --- 更新倒數顯示 (只更新當前站) ---
             if (currentFocusIndex !== -1) {
                 const st = stationData[currentFocusIndex];
                 const diff = (st.depDate - now) / 1000;
                 const timerEl = document.getElementById(`timer-${currentFocusIndex}`);
 
-                // 狀態樣式
                 let displayStr = "";
                 let statusClass = "";
 
                 if (diff <= 0) {
-                    // 已發車 (理論上會馬上跳下一站，除非是終點)
                     displayStr = "已發車";
-                    statusClass = "status-safe"; // 綠色
+                    statusClass = "status-safe";
                 } else if (diff > 60) {
-                    // 安全期 (綠色, mm:ss)
                     const m = Math.floor(diff / 60);
                     const s = Math.floor(diff % 60);
                     displayStr = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
                     statusClass = "status-safe";
                 } else {
-                    // 60秒內 (顯示秒數)
                     const s = Math.floor(diff);
                     displayStr = String(s).padStart(2, '0');
-                    
-                    if (s <= 10) {
-                        statusClass = "status-urgent"; // 紅色 (無閃爍)
-                    } else {
-                        statusClass = "status-ready"; // 黃色
-                    }
+                    if (s <= 10) statusClass = "status-urgent";
+                    else statusClass = "status-ready";
                 }
 
                 if(timerEl) {
@@ -391,7 +349,6 @@
             }
         }
         
-        // 嘗試請求螢幕喚醒 (在支援的瀏覽器上)
         document.body.addEventListener('click', async () => {
             try { if ('wakeLock' in navigator) await navigator.wakeLock.request('screen'); } catch(e){}
         });
