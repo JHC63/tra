@@ -668,8 +668,10 @@ body.show-all-numbers .station-label {
           <button onclick="importQuickData('154次')">154次</button>
           <button onclick="importQuickData('158次')">158次</button>
           <button onclick="importQuickData('160次')">160次</button>
+          <button onclick="importQuickData('191次')">191次</button>
           <button onclick="importQuickData('193次')">193次</button>
           <button onclick="importQuickData('194次')">194次</button>
+          <button onclick="importQuickData('196次')">196次</button>
         </div>
       </div>
 
@@ -792,8 +794,10 @@ body.show-all-numbers .station-label {
       '154次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "臺中", "桃園", "板橋", "臺北", "松山", "南港"] },
       '158次': { numCars: 3, startCar: 9, stations: ["彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
       '160次': { numCars: 3, startCar: 9, stations: ["田中", "社頭", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
+       '191次': { numCars: 3, startCar: 9, stations: ["臺中", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "屏東", "潮州"] },
       '193次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
-      '194次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] }
+      '194次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
+      '196次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "鳳山", "高雄", "新左營", "岡山", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "臺中"] }
     };
 
     // 狀態管理
@@ -961,8 +965,7 @@ body.show-all-numbers .station-label {
 
       const title = document.createElement('h3');
       title.style.cssText = 'text-align: center; color: var(--jr-blue); font-size: var(--font-size-xlarge); margin-bottom: 15px;';
-      title.textContent = `第 ${carNumber} 車`;
-      carContainer.appendChild(title);
+      title.textContent = `第 ${carNumber} 車`; carContainer.appendChild(title);
 
       const tableWrapper = document.createElement('div');
       tableWrapper.className = 'table-wrapper';
@@ -976,9 +979,6 @@ body.show-all-numbers .station-label {
       }
 
       let html = `
-        <tr>
-          <th colspan="5">第 ${carNumber} 車 ${isFlipped ? '' : ''}</th>
-        </tr>
         <tr>
           <th class="label">窗戶</th>
           <th class="label">走道</th>
