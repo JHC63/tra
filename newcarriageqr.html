@@ -171,22 +171,25 @@
          * 包含防撞檢測 (Collision Detection) 與 500型例外處理 (Routing Bypass)
          */
         function processRender(state, displayEl, statusEl, toggleBtnEl, startIndex = 0, mustBe500 = false, conflictValue = null) {
+            // 【Bug 修復】：當輸入長度不足或為空時，強制重置 RuleKey，避免狀態殘留
             if (!state.rawString || state.rawString.length < 3) {
                 displayEl.innerHTML = '';
                 statusEl.className = 'wait-msg';
                 statusEl.textContent = '等待完整輸入...';
                 toggleBtnEl.classList.remove('visible');
+                state.currentRuleKey = null; // 關鍵修復點
                 return;
             }
 
             let rawNum = parseInt(state.rawString, 10);
             
-            // 【防撞檢測】：互斥比對
+            // 防撞檢測：互斥比對
             if (conflictValue !== null && rawNum === conflictValue) {
                 displayEl.innerHTML = '';
                 statusEl.className = 'error-msg';
                 statusEl.textContent = `輸入無效：第二組不可與第一組 [${conflictValue}] 重複`;
                 toggleBtnEl.classList.remove('visible');
+                state.currentRuleKey = null; // 發生錯誤時同步清除狀態
                 return;
             }
 
@@ -210,7 +213,7 @@
                 return;
             }
 
-            // 【邏輯修正】：500型繞過偶數降階機制，維持原車號
+            // 500型繞過偶數降階機制，維持原車號
             const baseNum = (ruleKey === '500') ? rawNum : (rawNum % 2 === 0 ? rawNum - 1 : rawNum);
             const isAutoCorrected = rawNum !== baseNum;
 
@@ -273,6 +276,8 @@
             
             // 根據第一組結果動態決策第二組狀態
             const group2 = document.getElementById('group2');
+            
+            // 若第一組的 RuleKey 為 500 才顯示第二組；否則執行徹底清空 (Garbage Collection)
             if (AppState.currentRuleKey === '500') {
                 group2.style.display = 'block';
                 const display2 = document.getElementById('qrcodeDisplay2');
@@ -305,7 +310,7 @@
 
         const debouncedRender = debounce(renderPipeline, 300);
 
-        // 第一組事件綁定 (加入 State Diffing 優化)
+        // 第一組事件綁定 (State Diffing 優化)
         document.getElementById('inputNumber').addEventListener('input', (e) => {
             const sanitizedValue = e.target.value.replace(/\D/g, '');
             if (e.target.value !== sanitizedValue) {
@@ -319,7 +324,7 @@
             }
         });
 
-        // 第二組事件綁定 (加入 State Diffing 優化)
+        // 第二組事件綁定 (State Diffing 優化)
         document.getElementById('inputNumber2').addEventListener('input', (e) => {
             const sanitizedValue = e.target.value.replace(/\D/g, '');
             if (e.target.value !== sanitizedValue) {
