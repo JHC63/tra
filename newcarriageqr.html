@@ -15,7 +15,6 @@
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; display: flex; justify-content: center; min-height: 100vh; background-color: var(--bg-color); padding: 40px 20px; margin: 0; color: var(--text-primary); }
         
-        /* 自由座管理 - 右上角懸浮按鈕 (Floating Action Button) */
         .header-link {
             position: fixed;
             top: 24px;
@@ -42,30 +41,28 @@
             box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
             transform: translateY(-2px);
         }
-        .header-link svg {
-            width: 18px;
-            height: 18px;
-            transition: transform 0.3s ease;
-        }
-        .header-link:hover svg {
-            transform: scale(1.1);
-        }
+        .header-link svg { width: 18px; height: 18px; transition: transform 0.3s ease; }
+        .header-link:hover svg { transform: scale(1.1); }
 
         .container { background-color: var(--surface); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 1000px; text-align: center; }
         h1 { font-size: 32px; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .controls-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 30px; padding: 24px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0; }
-        .input-group input { padding: 18px 24px; font-size: 28px; width: 240px; text-align: center; border: 2px solid #cbd5e1; border-radius: var(--radius-md); transition: all 0.3s ease; outline: none; font-family: 'Courier New', Courier, monospace; font-weight: 700; color: var(--accent); background: var(--surface); }
+        
+        .controls-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 30px; padding: 24px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0; position: relative; }
+        .input-group input { padding: 18px 24px; font-size: 28px; width: 280px; text-align: center; border: 2px solid #cbd5e1; border-radius: var(--radius-md); transition: all 0.3s ease; outline: none; font-family: 'Courier New', Courier, monospace; font-weight: 700; color: var(--accent); background: var(--surface); }
         .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(59,130,246,0.15); transform: translateY(-2px); }
-        .input-group input::placeholder { color: #94a3b8; font-weight: 500; }
+        .input-group input::placeholder { color: #94a3b8; font-weight: 500; font-size: 18px; }
+        
         .toggle-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 16px; font-weight: 600; color: var(--text-secondary); background-color: var(--surface); border: 2px solid #cbd5e1; border-radius: 30px; cursor: pointer; transition: all 0.3s ease; opacity: 0; visibility: hidden; transform: translateY(10px); position: absolute; pointer-events: none; }
         .toggle-btn.visible { opacity: 1; visibility: visible; transform: translateY(0); position: relative; pointer-events: auto; }
         .toggle-btn.active { background-color: var(--text-primary); color: var(--surface); border-color: var(--text-primary); box-shadow: 0 4px 12px rgba(30,41,59,0.2); }
         .toggle-btn svg { width: 18px; height: 18px; transition: transform 0.4s ease; }
         .toggle-btn.active svg { transform: rotate(180deg); }
+        
         .status-panel { min-height: 28px; margin-bottom: 10px; }
         .group-name { font-size: 18px; color: var(--success); font-weight: 700; padding: 8px 16px; background: rgba(16,185,129,0.1); border-radius: 20px; display: inline-block; }
         .error-msg { color: var(--danger); font-size: 18px; font-weight: 700; padding: 8px 16px; background: rgba(239,68,68,0.1); border-radius: 20px; display: inline-block; }
         .wait-msg { color: var(--text-secondary); font-size: 18px; font-weight: 600; }
+        
         .qrcode-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 30px; }
         .qrcode-item { background-color: var(--surface); border-radius: var(--radius-md); padding: 24px 16px; box-shadow: var(--shadow-sm); text-align: center; border: 1px solid #f1f5f9; transition: transform 0.3s ease, box-shadow 0.3s ease; animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards; opacity: 0; transform: scale(0.95); }
         .qrcode-item:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
@@ -74,15 +71,12 @@
         .qr-canvas { display: flex; justify-content: center; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
         @keyframes popIn { to { opacity: 1; transform: scale(1); } }
 
-        /* 手機版 RWD 處理 */
+        /* 第二組專屬樣式 */
+        #group2 { display: none; margin-top: 40px; border-top: 2px dashed #cbd5e1; padding-top: 40px; }
+
         @media (max-width: 768px) {
-            body { padding-top: 80px; } /* 防止手機版右上角按鈕遮擋到標題 */
-            .header-link {
-                top: 16px;
-                right: 16px;
-                padding: 8px 16px;
-                font-size: 14px;
-            }
+            body { padding-top: 80px; } 
+            .header-link { top: 16px; right: 16px; padding: 8px 16px; font-size: 14px; }
         }
     </style>
 </head>
@@ -98,26 +92,51 @@
 
     <div class="container">
         <h1>編組QR Code</h1>
-        <div class="controls-wrapper">
-            <div class="input-group">
-                <input type="text" inputmode="numeric" id="inputNumber" placeholder="請輸入第一車數字" autocomplete="off">
+        
+        <div id="group1">
+            <div class="controls-wrapper">
+                <div class="input-group">
+                    <input type="text" inputmode="numeric" id="inputNumber" placeholder="請輸入第一組車號" autocomplete="off">
+                </div>
+                <div class="status-panel">
+                    <div id="statusMessage" class="wait-msg">等待輸入...</div>
+                </div>
+                <button id="toggleReverseBtn" class="toggle-btn" onclick="toggleDirection(1)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 10v12"></path><path d="M11 18l-4 4-4-4"></path>
+                        <path d="M17 14V2"></path><path d="M21 6l-4-4-4 4"></path>
+                    </svg>
+                    編組首尾互換
+                </button>
             </div>
-            <div class="status-panel">
-                <div id="statusMessage" class="wait-msg">等待輸入...</div>
-            </div>
-            <button id="toggleReverseBtn" class="toggle-btn" onclick="toggleDirection()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M7 10v12"></path><path d="M11 18l-4 4-4-4"></path>
-                    <path d="M17 14V2"></path><path d="M21 6l-4-4-4 4"></path>
-                </svg>
-                編組首尾互換
-            </button>
+            <div id="qrcodeDisplay" class="qrcode-container"></div>
         </div>
-        <div id="qrcodeDisplay" class="qrcode-container"></div>
+
+        <div id="group2">
+            <div class="controls-wrapper">
+                <div class="input-group">
+                    <input type="text" inputmode="numeric" id="inputNumber2" placeholder="請輸入第二組 500 型車號" autocomplete="off">
+                </div>
+                <div class="status-panel">
+                    <div id="statusMessage2" class="wait-msg">等待輸入...</div>
+                </div>
+                <button id="toggleReverseBtn2" class="toggle-btn" onclick="toggleDirection(2)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M7 10v12"></path><path d="M11 18l-4 4-4-4"></path>
+                        <path d="M17 14V2"></path><path d="M21 6l-4-4-4 4"></path>
+                    </svg>
+                    編組首尾互換
+                </button>
+            </div>
+            <div id="qrcodeDisplay2" class="qrcode-container"></div>
+        </div>
     </div>
 
     <script>
+        // 狀態隔離 (State Isolation)
         const AppState = { rawString: '', isReversed: false, currentRuleKey: null };
+        const AppState2 = { rawString: '', isReversed: false, currentRuleKey: null };
+        
         const REVERSIBLE_TYPES = ['500', '700', '800', '900'];
 
         const TrainFormationStrategies = {
@@ -136,9 +155,6 @@
             }
         };
 
-        /**
-         * 嚴格路由引擎 (Strict Routing Engine) - 防溢位精密版
-         */
         function detectTrainRule(rawNum) {
             if (rawNum >= 9001 && rawNum <= 9996) return '900';
             if (rawNum >= 3001 && rawNum <= 3994) return '3000';
@@ -150,60 +166,80 @@
             return null; 
         }
 
-        function renderPipeline() {
-            const display = document.getElementById('qrcodeDisplay');
-            const statusPanel = document.getElementById('statusMessage');
-            const toggleBtn = document.getElementById('toggleReverseBtn');
-            
-            if (!AppState.rawString || AppState.rawString.length < 3) {
-                display.innerHTML = '';
-                statusPanel.className = 'wait-msg';
-                statusPanel.textContent = '等待完整輸入...';
-                toggleBtn.classList.remove('visible');
+        /**
+         * 核心渲染邏輯抽象化 (Core Render Engine)
+         * 包含防撞檢測 (Collision Detection) 與 500型例外處理 (Routing Bypass)
+         */
+        function processRender(state, displayEl, statusEl, toggleBtnEl, startIndex = 0, mustBe500 = false, conflictValue = null) {
+            if (!state.rawString || state.rawString.length < 3) {
+                displayEl.innerHTML = '';
+                statusEl.className = 'wait-msg';
+                statusEl.textContent = '等待完整輸入...';
+                toggleBtnEl.classList.remove('visible');
                 return;
             }
 
-            let rawNum = parseInt(AppState.rawString, 10);
+            let rawNum = parseInt(state.rawString, 10);
+            
+            // 【防撞檢測】：互斥比對
+            if (conflictValue !== null && rawNum === conflictValue) {
+                displayEl.innerHTML = '';
+                statusEl.className = 'error-msg';
+                statusEl.textContent = `輸入無效：第二組不可與第一組 [${conflictValue}] 重複`;
+                toggleBtnEl.classList.remove('visible');
+                return;
+            }
+
             const ruleKey = detectTrainRule(rawNum);
-            AppState.currentRuleKey = ruleKey;
+            state.currentRuleKey = ruleKey;
             
-            if (!ruleKey || !TrainFormationStrategies[ruleKey]) {
-                display.innerHTML = '';
-                statusPanel.className = 'error-msg';
-                statusPanel.textContent = `輸入 [${rawNum}] 無效：不屬於任何車型`;
-                toggleBtn.classList.remove('visible');
+            // 防呆攔截：若指定僅限 500 型，其他車型拋錯
+            if (mustBe500 && ruleKey !== '500') {
+                displayEl.innerHTML = '';
+                statusEl.className = 'error-msg';
+                statusEl.textContent = `輸入 [${rawNum}] 無效：此欄位僅限 500 型`;
+                toggleBtnEl.classList.remove('visible');
                 return;
             }
 
-            const baseNum = rawNum % 2 === 0 ? rawNum - 1 : rawNum;
+            if (!ruleKey || !TrainFormationStrategies[ruleKey]) {
+                displayEl.innerHTML = '';
+                statusEl.className = 'error-msg';
+                statusEl.textContent = `輸入 [${rawNum}] 無效：不屬於任何車型`;
+                toggleBtnEl.classList.remove('visible');
+                return;
+            }
+
+            // 【邏輯修正】：500型繞過偶數降階機制，維持原車號
+            const baseNum = (ruleKey === '500') ? rawNum : (rawNum % 2 === 0 ? rawNum - 1 : rawNum);
             const isAutoCorrected = rawNum !== baseNum;
 
             if (REVERSIBLE_TYPES.includes(ruleKey)) {
-                toggleBtn.classList.add('visible');
+                toggleBtnEl.classList.add('visible');
             } else {
-                toggleBtn.classList.remove('visible');
-                AppState.isReversed = false; 
+                toggleBtnEl.classList.remove('visible');
+                state.isReversed = false; 
             }
 
-            if (AppState.isReversed) {
-                toggleBtn.classList.add('active');
+            if (state.isReversed) {
+                toggleBtnEl.classList.add('active');
             } else {
-                toggleBtn.classList.remove('active');
+                toggleBtnEl.classList.remove('active');
             }
 
             const { name, cars } = TrainFormationStrategies[ruleKey](baseNum);
             
             let finalCars = [...cars];
-            let reverseStatusText = AppState.isReversed ? ' [已互換]' : '';
-            if (AppState.isReversed) {
+            let reverseStatusText = state.isReversed ? ' [已互換]' : '';
+            if (state.isReversed) {
                 finalCars.reverse();
             }
 
-            statusPanel.className = 'group-name';
+            statusEl.className = 'group-name';
             let correctMsg = isAutoCorrected ? `` : ``;
-            statusPanel.textContent = `${name}${correctMsg}${reverseStatusText}`;
+            statusEl.textContent = `${name}${correctMsg}${reverseStatusText}`;
 
-            display.innerHTML = '';
+            displayEl.innerHTML = '';
             const fragment = document.createDocumentFragment();
 
             finalCars.forEach((text, index) => {
@@ -214,7 +250,7 @@
                 item.innerHTML = `
                     <div class="text-content">${text}</div>
                     <div class="qr-canvas"></div>
-                    <div class="car-number">第 ${index + 1} 車</div>
+                    <div class="car-number">第 ${startIndex + index + 1} 車</div>
                 `;
                 
                 new QRCode(item.querySelector('.qr-canvas'), {
@@ -224,7 +260,39 @@
                 fragment.appendChild(item);
             });
 
-            display.appendChild(fragment);
+            displayEl.appendChild(fragment);
+        }
+
+        // 渲染管線總成
+        function renderPipeline() {
+            // 處理第一組 (主編組)
+            const display1 = document.getElementById('qrcodeDisplay');
+            const status1 = document.getElementById('statusMessage');
+            const btn1 = document.getElementById('toggleReverseBtn');
+            processRender(AppState, display1, status1, btn1, 0, false, null);
+            
+            // 根據第一組結果動態決策第二組狀態
+            const group2 = document.getElementById('group2');
+            if (AppState.currentRuleKey === '500') {
+                group2.style.display = 'block';
+                const display2 = document.getElementById('qrcodeDisplay2');
+                const status2 = document.getElementById('statusMessage2');
+                const btn2 = document.getElementById('toggleReverseBtn2');
+                
+                // 提取第一組的值作為互斥驗證標準
+                const firstGroupValue = AppState.rawString.length >= 3 ? parseInt(AppState.rawString, 10) : null;
+                
+                // 第二組設定 startIndex 為 4，並傳入 firstGroupValue 進行防撞檢測
+                processRender(AppState2, display2, status2, btn2, 4, true, firstGroupValue);
+            } else {
+                // 狀態重置與 DOM 清除 (State Cleanup)
+                group2.style.display = 'none';
+                AppState2.rawString = '';
+                AppState2.isReversed = false;
+                AppState2.currentRuleKey = null;
+                document.getElementById('inputNumber2').value = '';
+                document.getElementById('qrcodeDisplay2').innerHTML = '';
+            }
         }
 
         function debounce(func, delay) {
@@ -237,18 +305,41 @@
 
         const debouncedRender = debounce(renderPipeline, 300);
 
+        // 第一組事件綁定 (加入 State Diffing 優化)
         document.getElementById('inputNumber').addEventListener('input', (e) => {
             const sanitizedValue = e.target.value.replace(/\D/g, '');
-            if (e.target.value !== sanitizedValue) e.target.value = sanitizedValue;
+            if (e.target.value !== sanitizedValue) {
+                e.target.value = sanitizedValue;
+            }
             
-            AppState.rawString = sanitizedValue;
-            AppState.isReversed = false; 
-            
-            debouncedRender();
+            if (AppState.rawString !== sanitizedValue) {
+                AppState.rawString = sanitizedValue;
+                AppState.isReversed = false; 
+                debouncedRender();
+            }
         });
 
-        window.toggleDirection = function() {
-            AppState.isReversed = !AppState.isReversed;
+        // 第二組事件綁定 (加入 State Diffing 優化)
+        document.getElementById('inputNumber2').addEventListener('input', (e) => {
+            const sanitizedValue = e.target.value.replace(/\D/g, '');
+            if (e.target.value !== sanitizedValue) {
+                e.target.value = sanitizedValue;
+            }
+            
+            if (AppState2.rawString !== sanitizedValue) {
+                AppState2.rawString = sanitizedValue;
+                AppState2.isReversed = false; 
+                debouncedRender();
+            }
+        });
+
+        // 首尾互換控制器 (Event Delegation)
+        window.toggleDirection = function(groupNum) {
+            if (groupNum === 1) {
+                AppState.isReversed = !AppState.isReversed;
+            } else {
+                AppState2.isReversed = !AppState2.isReversed;
+            }
             renderPipeline(); 
         };
     </script>
