@@ -3,278 +3,254 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>編組 QR Code 生成器</title>
+    <title>編組QR Code</title>
     <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
     <style>
-        body {
-            font-family: "Segoe UI", Arial, sans-serif;
-            display: flex;
-            flex-direction: column;
+        :root { 
+            --bg-color: #f3f6f9; --surface: #ffffff; --text-primary: #1e293b; 
+            --text-secondary: #64748b; --accent: #3b82f6; --success: #10b981; 
+            --danger: #ef4444; --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+            --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08);
+            --radius-md: 12px; --radius-lg: 20px;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; display: flex; justify-content: center; min-height: 100vh; background-color: var(--bg-color); padding: 40px 20px; margin: 0; color: var(--text-primary); }
+        
+        /* 自由座管理 - 右上角懸浮按鈕 (Floating Action Button) */
+        .header-link {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            display: inline-flex;
             align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
-            background-color: #f0f2f5;
-            padding: 20px;
+            gap: 8px;
+            padding: 10px 20px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent);
+            background-color: var(--surface);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 30px;
+            text-decoration: none;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100;
+        }
+        .header-link:hover {
+            border-color: var(--accent);
+            background-color: var(--accent);
+            color: var(--surface);
+            box-shadow: 0 6px 15px rgba(59, 130, 246, 0.25);
+            transform: translateY(-2px);
+        }
+        .header-link svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+        .header-link:hover svg {
+            transform: scale(1.1);
         }
 
-        .container {
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 920px;
-            text-align: center;
-        }
+        .container { background-color: var(--surface); padding: 40px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 1000px; text-align: center; }
+        h1 { font-size: 32px; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .controls-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; margin-bottom: 30px; padding: 24px; background: #f8fafc; border-radius: var(--radius-md); border: 1px solid #e2e8f0; }
+        .input-group input { padding: 18px 24px; font-size: 28px; width: 240px; text-align: center; border: 2px solid #cbd5e1; border-radius: var(--radius-md); transition: all 0.3s ease; outline: none; font-family: 'Courier New', Courier, monospace; font-weight: 700; color: var(--accent); background: var(--surface); }
+        .input-group input:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(59,130,246,0.15); transform: translateY(-2px); }
+        .input-group input::placeholder { color: #94a3b8; font-weight: 500; }
+        .toggle-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 16px; font-weight: 600; color: var(--text-secondary); background-color: var(--surface); border: 2px solid #cbd5e1; border-radius: 30px; cursor: pointer; transition: all 0.3s ease; opacity: 0; visibility: hidden; transform: translateY(10px); position: absolute; pointer-events: none; }
+        .toggle-btn.visible { opacity: 1; visibility: visible; transform: translateY(0); position: relative; pointer-events: auto; }
+        .toggle-btn.active { background-color: var(--text-primary); color: var(--surface); border-color: var(--text-primary); box-shadow: 0 4px 12px rgba(30,41,59,0.2); }
+        .toggle-btn svg { width: 18px; height: 18px; transition: transform 0.4s ease; }
+        .toggle-btn.active svg { transform: rotate(180deg); }
+        .status-panel { min-height: 28px; margin-bottom: 10px; }
+        .group-name { font-size: 18px; color: var(--success); font-weight: 700; padding: 8px 16px; background: rgba(16,185,129,0.1); border-radius: 20px; display: inline-block; }
+        .error-msg { color: var(--danger); font-size: 18px; font-weight: 700; padding: 8px 16px; background: rgba(239,68,68,0.1); border-radius: 20px; display: inline-block; }
+        .wait-msg { color: var(--text-secondary); font-size: 18px; font-weight: 600; }
+        .qrcode-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 30px; }
+        .qrcode-item { background-color: var(--surface); border-radius: var(--radius-md); padding: 24px 16px; box-shadow: var(--shadow-sm); text-align: center; border: 1px solid #f1f5f9; transition: transform 0.3s ease, box-shadow 0.3s ease; animation: popIn 0.4s cubic-bezier(0.175,0.885,0.32,1.275) forwards; opacity: 0; transform: scale(0.95); }
+        .qrcode-item:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+        .text-content { font-family: 'Courier New', Courier, monospace; font-size: 18px; margin-bottom: 16px; font-weight: 800; color: var(--text-primary); letter-spacing: 1px; }
+        .car-number { font-weight: 700; font-size: 14px; margin-top: 16px; color: var(--accent); background: rgba(59,130,246,0.1); padding: 6px 12px; border-radius: 12px; display: inline-block; }
+        .qr-canvas { display: flex; justify-content: center; background: #fff; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        @keyframes popIn { to { opacity: 1; transform: scale(1); } }
 
-        h1 {
-            font-size: 32px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .controls input {
-            padding: 12px;
-            font-size: 24px;
-            width: 120px;
-            text-align: center;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            margin-top: 10px;
-        }
-
-        .button-group {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-
-        .button-group button {
-            flex: 0 0 120px;
-            padding: 12px 10px;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            color: #fff;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #btnA { background-color: #007bff; }
-        #btnB { background-color: #17a2b8; }
-        #btnC { background-color: #6f42c1; }
-        #btnD { background-color: #20c997; }
-        #btnE { background-color: #000; color: #fff; }
-        #btnF { background-color: #dc3545; }
-        #btnG { background-color: #fd7e14; }
-
-        .button-group button.active {
-            box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.7);
-            transform: scale(1.05);
-        }
-
-        .reverse-btn {
-            background-color: #343a40 !important;
-            color: #fff !important;
-        }
-
-        .group-name {
-            font-size: 24px;
-            margin: 20px 0 10px;
-            color: #28a745;
-            font-weight: bold;
-        }
-
-        .additional-info {
-            color: red;
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-
-        .qrcode-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 24px;
-            margin-top: 20px;
-        }
-
-        .qrcode-item {
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .text-content {
-            font-family: monospace;
-            font-size: 18px;
-            margin-bottom: 10px;
-        }
-
-        .car-number {
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 10px;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* 手機版 RWD 處理 */
+        @media (max-width: 768px) {
+            body { padding-top: 80px; } /* 防止手機版右上角按鈕遮擋到標題 */
+            .header-link {
+                top: 16px;
+                right: 16px;
+                padding: 8px 16px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
 <body>
+    <a href="https://jhc63.github.io/tra/NRSeat.html" class="header-link" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        自由座管理
+    </a>
+
     <div class="container">
-        <h1>編組 QR Code 生成器</h1>
-        <div class="controls">
-            <label>請輸入車廂第1車號碼再點擊車型：</label>
-            <input type="number" id="inputNumber" value="" oninput="generateQRCodes()">
+        <h1>編組QR Code</h1>
+        <div class="controls-wrapper">
+            <div class="input-group">
+                <input type="text" inputmode="numeric" id="inputNumber" placeholder="請輸入第一車數字" autocomplete="off">
+            </div>
+            <div class="status-panel">
+                <div id="statusMessage" class="wait-msg">等待輸入...</div>
+            </div>
+            <button id="toggleReverseBtn" class="toggle-btn" onclick="toggleDirection()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M7 10v12"></path><path d="M11 18l-4 4-4-4"></path>
+                    <path d="M17 14V2"></path><path d="M21 6l-4-4-4 4"></path>
+                </svg>
+                編組首尾互換
+            </button>
         </div>
-        <div class="button-group">
-            <button id="btnA" onclick="showGroup('A')">500型</button>
-            <button id="btnB" onclick="showGroup('B')">700型</button>
-            <button id="btnC" onclick="showGroup('C')">800型</button>
-            <button id="btnD" onclick="showGroup('D')">900型</button>
-            <button id="btnE" onclick="showGroup('E')">3000型</button>
-            <button id="btnF" onclick="showGroup('F')">普悠瑪</button>
-            <button id="btnG" onclick="showGroup('G')">太魯閣</button>
-            <button id="reverseOrderBtn" class="reverse-btn" onclick="toggleOrder()" style="display: none;">首末互換</button>
-        </div>
-        <div class="group-name" id="currentGroupName"></div>
-        <div id="additionalMessage" class="additional-info"></div>
         <div id="qrcodeDisplay" class="qrcode-container"></div>
     </div>
 
     <script>
-        let currentGroup = '';
-        let isReversed = false;
+        const AppState = { rawString: '', isReversed: false, currentRuleKey: null };
+        const REVERSIBLE_TYPES = ['500', '700', '800', '900'];
 
-        function showGroup(group) {
-            currentGroup = group;
-            isReversed = false;
-            document.querySelectorAll('.button-group button').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById(`btn${group}`);
-            if (activeBtn) activeBtn.classList.add('active');
+        const TrainFormationStrategies = {
+            '500': (n) => ({ name: '500型 (注意EMC/EM方向)', cars: [`45EMC${n}`, `45EP${n}`, `45ET${n}`, `45EM${n}`] }),
+            '700': (n) => ({ name: '700型', cars: [`45EMC${n}`, `45EP${n}`, `40ET${n}`, `45EM${n}`, `45EM${n+1}`, `40ET${n+1}`, `45EP${n+1}`, `45EMC${n+1}`] }),
+            '800': (n) => ({ name: '800型', cars: [`45ED${n}`, `50EMA${n}`, `50EP${n}`, `50EMB${n}`, `50EMB${n+1}`, `50EP${n+1}`, `50EMA${n+1}`, `45ED${n+1}`] }),
+            '900': (n) => ({ name: '900型', cars: [`50ED${n}`, `50EM${n}`, `45EP${n}`, `50EM${n+1}`, `45EM${n+2}`, `45EP${n+1}`, `50EM${n+3}`, `45EP${n+2}`, `50EM${n+4}`, `50ED${n+1}`] }),
+            '3000': (n) => ({ name: '3000型', cars: [`45ED${n}`, `45EM${n}`, `45EP${n}`, `45EM${n+1}`, `45ET${n}`, `45EM${n+2}`, `50EP${n+1}`, `45EM${n+3}`, `45EM${n+4}`, `45EP${n+2}`, `45EM${n+5}`, `45ED${n+1}`] }),
+            'TAROKO': (n) => { 
+                const l2 = n % 100, h = n - l2 + l2 * 2, a = h - (h % 100) + (h % 100) - 1, s = n - l2 + l2 + 1, y = s - (s % 100) + (s % 100) * 2, c = y - (y % 100) + (y % 100) - 1;
+                return { name: '太魯閣 (TEMU1000)', cars: [`40TED${n}`, `40TEM${a}`, `45TEP${n}`, `40TEM${h}`, `40TEM${y}`, `45TEP${s}`, `40TEM${c}`, `40TED${s}`] };
+            },
+            'PUYUMA': (n) => { 
+                const l2 = n % 100, h = n - l2 + l2 * 2, a = h - (h % 100) + (h % 100) - 1, s = n - l2 + l2 + 1, y = s - (s % 100) + (s % 100) * 2, c = y - (y % 100) + (y % 100) - 1;
+                return { name: '普悠瑪 (TEMU2000)', cars: [`40TED${n}`, `40TEMA${a}`, `45TEP${n}`, `40TEMB${h}`, `40TEMB${y}`, `45TEP${s}`, `40TEMA${c}`, `40TED${s}`] };
+            }
+        };
 
-            const additionalMessageDiv = document.getElementById('additionalMessage');
-            additionalMessageDiv.textContent = group === 'A' ? '注意EMC、EM方向' : '';
-
-            document.getElementById('reverseOrderBtn').style.display = ['A','B','C','D'].includes(group) ? 'inline-block' : 'none';
-
-            generateQRCodes();
+        /**
+         * 嚴格路由引擎 (Strict Routing Engine) - 防溢位精密版
+         */
+        function detectTrainRule(rawNum) {
+            if (rawNum >= 9001 && rawNum <= 9996) return '900';
+            if (rawNum >= 3001 && rawNum <= 3994) return '3000';
+            if (rawNum >= 2001 && rawNum <= 2948) return 'PUYUMA';
+            if (rawNum >= 1001 && rawNum <= 1948) return 'TAROKO';
+            if (rawNum >= 801 && rawNum <= 898) return '800';
+            if (rawNum >= 701 && rawNum <= 798) return '700';
+            if (rawNum >= 501 && rawNum <= 599) return '500';
+            return null; 
         }
 
-        function toggleOrder() {
-            isReversed = !isReversed;
-            generateQRCodes();
-        }
-
-        function generateQRCodes() {
-            const inputNum = parseInt(document.getElementById('inputNumber').value);
-            if (isNaN(inputNum)) {
-                //if (currentGroup) alert('請輸入有效數字');
+        function renderPipeline() {
+            const display = document.getElementById('qrcodeDisplay');
+            const statusPanel = document.getElementById('statusMessage');
+            const toggleBtn = document.getElementById('toggleReverseBtn');
+            
+            if (!AppState.rawString || AppState.rawString.length < 3) {
+                display.innerHTML = '';
+                statusPanel.className = 'wait-msg';
+                statusPanel.textContent = '等待完整輸入...';
+                toggleBtn.classList.remove('visible');
                 return;
             }
 
-            const display = document.getElementById('qrcodeDisplay');
-            display.innerHTML = '';
-            let data = [];
-            let name = '';
-
-            switch (currentGroup) {
-                case 'A':
-                    name = '500型';
-                    data = [`45EMC${inputNum}`, `45EP${inputNum}`, `45ET${inputNum}`, `45EM${inputNum}`];
-                    break;
-                case 'B':
-                    name = '700型';
-                    const b1 = inputNum, b2 = inputNum + 1;
-                    data = [`45EMC${b1}`, `45EP${b1}`, `40ET${b1}`, `45EM${b1}`, `45EM${b2}`, `40ET${b2}`, `45EP${b2}`, `45EMC${b2}`];
-                    break;
-                case 'C':
-                    name = '800型';
-                    const c1 = inputNum, c2 = inputNum + 1;
-                    data = [`45ED${c1}`, `50EMA${c1}`, `50EP${c1}`, `50EMB${c1}`, `50EMB${c2}`, `50EP${c2}`, `50EMA${c2}`, `45ED${c2}`];
-                    break;
-                case 'D':
-                    name = '900型';
-                    const d0 = inputNum, d1 = d0 + 1, d2 = d0 + 2, d3 = d0 + 3, d4 = d0 + 4;
-                    data = [`50ED${d0}`, `50EM${d0}`, `45EP${d0}`, `50EM${d1}`, `45EM${d2}`, `45EP${d1}`, `50EM${d3}`, `45EP${d2}`, `50EM${d4}`, `50ED${d1}`];
-                    break;
-                case 'E':
-                    name = '3000型';
-                    const e0 = inputNum, e1 = e0 + 1, e2 = e0 + 2, e3 = e0 + 3, e4 = e0 + 4, e5 = e0 + 5;
-                    data = [`45ED${e0}`, `45EM${e0}`, `45EP${e0}`, `45EM${e1}`, `45ET${e0}`, `45EM${e2}`, `50EP${e1}`, `45EM${e3}`, `45EM${e4}`, `45EP${e2}`, `45EM${e5}`, `45ED${e1}`];
-                    break;
-                case 'F':
-                    name = '普悠瑪';
-                    const last2 = inputNum % 100;
-                    const hash = inputNum - last2 + last2 * 2;
-                    const at = hash - (hash % 100) + (hash % 100) - 1;
-                    const sec = inputNum - last2 + last2 + 1;
-                    const yen = sec - (sec % 100) + (sec % 100) * 2;
-                    const cent = yen - (yen % 100) + (yen % 100) - 1;
-                    data = [
-                        `40TED${inputNum}`, `40TEMA${at}`, `45TEP${inputNum}`, `40TEMB${hash}`,
-                        `40TEMB${yen}`, `45TEP${sec}`, `40TEMA${cent}`, `40TED${sec}`
-                    ];
-                    break;
-                case 'G':
-                    name = '太魯閣';
-                    const gLast2 = inputNum % 100;
-                    const gHash = inputNum - gLast2 + gLast2 * 2;
-                    const gAt = gHash - (gHash % 100) + (gHash % 100) - 1;
-                    const gSec = inputNum - gLast2 + gLast2 + 1;
-                    const gYen = gSec - (gSec % 100) + (gSec % 100) * 2;
-                    const gCent = gYen - (gYen % 100) + (gYen % 100) - 1;
-                    data = [
-                        `40TED${inputNum}`, `40TEM${gAt}`, `45TEP${inputNum}`, `40TEM${gHash}`,
-                        `40TEM${gYen}`, `45TEP${gSec}`, `40TEM${gCent}`, `40TED${gSec}`
-                    ];
-                    break;
+            let rawNum = parseInt(AppState.rawString, 10);
+            const ruleKey = detectTrainRule(rawNum);
+            AppState.currentRuleKey = ruleKey;
+            
+            if (!ruleKey || !TrainFormationStrategies[ruleKey]) {
+                display.innerHTML = '';
+                statusPanel.className = 'error-msg';
+                statusPanel.textContent = `輸入 [${rawNum}] 無效：不屬於任何車型`;
+                toggleBtn.classList.remove('visible');
+                return;
             }
 
-            document.getElementById('currentGroupName').textContent = name;
+            const baseNum = rawNum % 2 === 0 ? rawNum - 1 : rawNum;
+            const isAutoCorrected = rawNum !== baseNum;
 
-            if (isReversed) data.reverse();
+            if (REVERSIBLE_TYPES.includes(ruleKey)) {
+                toggleBtn.classList.add('visible');
+            } else {
+                toggleBtn.classList.remove('visible');
+                AppState.isReversed = false; 
+            }
 
-            let carNumber = 1;
-            data.forEach(text => {
+            if (AppState.isReversed) {
+                toggleBtn.classList.add('active');
+            } else {
+                toggleBtn.classList.remove('active');
+            }
+
+            const { name, cars } = TrainFormationStrategies[ruleKey](baseNum);
+            
+            let finalCars = [...cars];
+            let reverseStatusText = AppState.isReversed ? ' [已互換]' : '';
+            if (AppState.isReversed) {
+                finalCars.reverse();
+            }
+
+            statusPanel.className = 'group-name';
+            let correctMsg = isAutoCorrected ? `` : ``;
+            statusPanel.textContent = `${name}${correctMsg}${reverseStatusText}`;
+
+            display.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+
+            finalCars.forEach((text, index) => {
                 const item = document.createElement('div');
                 item.className = 'qrcode-item';
-
-                const label = document.createElement('div');
-                label.className = 'text-content';
-                label.textContent = text;
-
-                const qrcodeDiv = document.createElement('div');
-                const carLabel = document.createElement('div');
-                carLabel.className = 'car-number';
-                carLabel.textContent = `第 ${carNumber} 車`;
-                carNumber++;
-
-                item.appendChild(label);
-                item.appendChild(qrcodeDiv);
-                item.appendChild(carLabel);
-                display.appendChild(item);
-
-                new QRCode(qrcodeDiv, {
-                    text: text,
-                    width: 192,
-                    height: 192,
-                    correctLevel: QRCode.CorrectLevel.H
+                item.style.animationDelay = `${index * 0.05}s`; 
+                
+                item.innerHTML = `
+                    <div class="text-content">${text}</div>
+                    <div class="qr-canvas"></div>
+                    <div class="car-number">第 ${index + 1} 車</div>
+                `;
+                
+                new QRCode(item.querySelector('.qr-canvas'), {
+                    text: text, width: 150, height: 150, correctLevel: QRCode.CorrectLevel.M 
                 });
+                
+                fragment.appendChild(item);
             });
+
+            display.appendChild(fragment);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            showGroup('');
+        function debounce(func, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        const debouncedRender = debounce(renderPipeline, 300);
+
+        document.getElementById('inputNumber').addEventListener('input', (e) => {
+            const sanitizedValue = e.target.value.replace(/\D/g, '');
+            if (e.target.value !== sanitizedValue) e.target.value = sanitizedValue;
+            
+            AppState.rawString = sanitizedValue;
+            AppState.isReversed = false; 
+            
+            debouncedRender();
         });
+
+        window.toggleDirection = function() {
+            AppState.isReversed = !AppState.isReversed;
+            renderPipeline(); 
+        };
     </script>
 </body>
 </html>
