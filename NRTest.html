@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>自由座管理 - JR Style</title>
+  <title>自由座管理</title>
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
   <style>
@@ -586,44 +586,15 @@
         border-top: 3px solid var(--jr-blue);
       }
 
-      .mobile-action-bar button {
+            .mobile-action-bar button {
         flex: 1;
-        margin: 0 5px;
-        padding: 12px 8px;
-        font-size: 16px;
-      }
-
-      /* 懸浮滾動按鈕樣式 */
-      .scroll-buttons-container {
-        position: fixed;
-        bottom: 100px;
-        /* 避開底部的 mobile-action-bar */
-        right: 20px;
-        z-index: 900;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .scroll-buttons-container button {
-        width: 50px;
-        height: 50px;
-        font-size: 24px;
-        padding: 0;
-        border-radius: 50%;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        margin: 0 3px;         /* 縮小按鈕之間的間距 */
+        padding: 10px 2px;     /* 縮小內距以容納更多按鈕 */
+        font-size: 14px;       /* 稍微調小字體 */
+        white-space: nowrap;   /* 防止文字因寬度不足而換行 */
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.3s ease;
-      }
-
-      /* 確保手機版時按鈕位置正確 */
-      @media (max-width: 768px) {
-        .scroll-buttons-container {
-          bottom: 90px;
-          /* 手機版底部操作列更高 */
-        }
       }
 
       #modal-station-buttons {
@@ -772,6 +743,8 @@
     <button onclick="undoLastAction()" title="上一步">↩️</button>
     <button onclick="exportSeatingCharts()">💾 存檔</button>
     <button onclick="showHandoverQRCode()">📱 QR</button>
+    <button onclick="scrollToTop()" title="回頂端">⏫</button>
+    <button onclick="scrollToBottom()" title="到底部">⏬</button>
   </div>
 
   <script>
@@ -1391,10 +1364,7 @@
       loadSettingsFromHash();
     };
   </script>
-  <div class="scroll-buttons-container" id="scroll-buttons-container">
-    <button onclick="scrollToTop()" title="回頂端">⏫</button>
-    <button onclick="scrollToBottom()" title="到底部">⏬</button>
-  </div>
+ 
 
 </body>
 
