@@ -214,6 +214,12 @@
       box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
     }
 
+    #train-filter-input:focus {
+      outline: none;
+      border-color: var(--jr-blue);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
     /* 按鈕樣式 */
     button {
       padding: 12px 24px;
@@ -629,6 +635,11 @@
 
     <div id="settings-tab" class="tab-content active">
       <div class="quick-import-area">
+        <div style="margin-bottom: 15px;">
+          <input type="text" id="train-filter-input" inputmode="numeric" placeholder="輸入數字篩選車次"
+            oninput="filterTrainButtons(this.value)"
+            style="width: 100%; padding: 12px 16px; font-size: var(--font-size-base); border: 2px solid var(--jr-border); border-radius: 8px; transition: border-color 0.3s ease;">
+        </div>
         <div style="margin-bottom: 8px; font-weight: 700; color: var(--jr-blue); font-size: var(--font-size-base);">
           直達車（9車）</div>
         <div class="quick-import-buttons" style="margin-bottom: 20px;">
@@ -908,19 +919,17 @@
 
       confirmSettings(false);
 
-      setTimeout(() => {
-        if (state.seatSelections) {
-          document.querySelectorAll('.station-label').forEach(label => {
-            const seatIdBase = label.id.substring(6);
-            const stationName = state.seatSelections[seatIdBase] || '';
-            label.textContent = stationName;
-            toggleSeatColor(seatIdBase, stationName);
-          });
-        }
-        if (state.lastFilter && currentStations.includes(state.lastFilter)) {
-          updateStations(state.lastFilter, currentStations);
-        }
-      }, 50);
+      if (state.seatSelections) {
+        document.querySelectorAll('.station-label').forEach(label => {
+          const seatIdBase = label.id.substring(6);
+          const stationName = state.seatSelections[seatIdBase] || '';
+          label.textContent = stationName;
+          toggleSeatColor(seatIdBase, stationName);
+        });
+      }
+      if (state.lastFilter && currentStations.includes(state.lastFilter)) {
+        applyFilterVisual(state.lastFilter, currentStations);
+      }
     }
 
     function undoLastAction() {
@@ -952,7 +961,7 @@
       container.appendChild(newField);
     }
 
-    function resetSettingsToDefault(skipConfirm = false) {
+    function resetSettingsToDefault(skipConfirm = false, showMsg = true) {
       if (!skipConfirm && !confirm('確定要清空所有設定嗎？')) return;
 
       document.getElementById('num-cars').value = defaultNumCars;
@@ -968,7 +977,7 @@
       Object.keys(carPerspectiveState).forEach(key => delete carPerspectiveState[key]);
       history = [];
       historyPointer = -1;
-      showMessage('已清空所有設定');
+      if (showMsg) showMessage('已清空所有設定');
     }
 
     function confirmSettings(saveToHistory = true) {
@@ -1127,6 +1136,21 @@
       });
     }
 
+    function applyFilterVisual(selectedStation, stations) {
+      lastActiveStationFilter = selectedStation;
+      const selectedIndex = stations.indexOf(selectedStation);
+
+      document.querySelectorAll('#global-station-buttons button').forEach(button => {
+        const buttonIndex = stations.indexOf(button.textContent);
+        if (button.textContent === selectedStation) {
+          button.classList.add('active-filter');
+        } else {
+          button.classList.remove('active-filter');
+        }
+        button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
+      });
+    }
+
     function toggleIndividualPerspective(carNumber, stations) {
       carPerspectiveState[carNumber] = !carPerspectiveState[carNumber];
       const oldCarChartContainer = document.getElementById(`car-chart-${carNumber}`);
@@ -1153,33 +1177,48 @@
 
     function generateExportUrl() {
       const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
-      const seatSelections = {};
+      const numCars = parseInt(document.getElementById('num-cars').value) || defaultNumCars;
+      const startCar = parseInt(document.getElementById('start-car').value) || defaultStartCar;
 
-      document.querySelectorAll('.station-label').forEach(label => {
-        if (label.textContent) {
-          const stationIndex = stations.indexOf(label.textContent);
-          const seatIdBase = label.id.substring(6);
-
-          if (stationIndex > -1) {
-            seatSelections[seatIdBase] = stationIndex;
-          } else if (label.textContent === '員工') {
-            seatSelections[seatIdBase] = 'E';
+      const seatStrings = [];
+      for (let car = startCar; car < startCar + numCars; car++) {
+        let carStr = '';
+        for (let seatNum = 1; seatNum <= 52; seatNum++) {
+          const label = document.getElementById(`label-${car}-${seatNum}`);
+          if (label && label.textContent) {
+            const stationIndex = stations.indexOf(label.textContent);
+            if (stationIndex > -1) {
+              carStr += stationIndex.toString(36);
+            } else if (label.textContent === '員工') {
+              carStr += 'E';
+            } else {
+              carStr += '-';
+            }
+          } else {
+            carStr += '-';
           }
         }
-      });
+        seatStrings.push(carStr.replace(/-+$/, ''));
+      }
+
+      let pStr = '';
+      for (let car = startCar; car < startCar + numCars; car++) {
+        pStr += carPerspectiveState[car] ? '1' : '0';
+      }
 
       const filterIndex = lastActiveStationFilter ? stations.indexOf(lastActiveStationFilter) : -1;
 
-      const shortKeyExportData = {
-        n: document.getElementById('num-cars').value,
-        c: document.getElementById('start-car').value,
-        t: stations,
-        s: seatSelections,
-        p: carPerspectiveState,
-        f: filterIndex > -1 ? filterIndex : null
+      const exportData = {
+        n: numCars.toString(),
+        c: startCar.toString(),
+        t: stations
       };
+      const hasSeats = seatStrings.some(s => s.length > 0);
+      if (hasSeats) exportData.s = seatStrings;
+      if (pStr.includes('1')) exportData.p = pStr;
+      if (filterIndex > -1) exportData.f = filterIndex;
 
-      const hash = LZString.compressToEncodedURIComponent(JSON.stringify(shortKeyExportData));
+      const hash = LZString.compressToEncodedURIComponent(JSON.stringify(exportData));
       return `${window.location.href.split('#')[0]}#${hash}`;
     }
 
@@ -1193,7 +1232,7 @@
 
     function loadSettingsFromHash() {
       if (!location.hash || location.hash.length <= 1) {
-        resetSettingsToDefault(true);
+        resetSettingsToDefault(true, false);
         openTab(null, 'settings-tab');
         document.getElementById('startup-modal').style.display = 'block';
         return;
@@ -1205,27 +1244,60 @@
 
         const hashData = JSON.parse(decompressedString);
         const stations = hashData.t || [];
+        const numCars = parseInt(hashData.n) || defaultNumCars;
+        const startCar = parseInt(hashData.c) || defaultStartCar;
         const seatSelectionsWithNames = {};
 
         if (hashData.s) {
-          for (const seatId in hashData.s) {
-            const stationData = hashData.s[seatId];
-            if (typeof stationData === 'number' && stations[stationData] !== undefined) {
-              seatSelectionsWithNames[seatId] = stations[stationData];
-            } else if (stationData === 'E') {
-              seatSelectionsWithNames[seatId] = '員工';
+          if (Array.isArray(hashData.s)) {
+            hashData.s.forEach((carStr, carIndex) => {
+              const carNumber = startCar + carIndex;
+              for (let i = 0; i < carStr.length; i++) {
+                const ch = carStr[i];
+                if (ch !== '-') {
+                  const seatId = `${carNumber}-${i + 1}`;
+                  if (ch === 'E') {
+                    seatSelectionsWithNames[seatId] = '員工';
+                  } else {
+                    const stationIndex = parseInt(ch, 36);
+                    if (stations[stationIndex] !== undefined) {
+                      seatSelectionsWithNames[seatId] = stations[stationIndex];
+                    }
+                  }
+                }
+              }
+            });
+          } else {
+            for (const seatId in hashData.s) {
+              const stationData = hashData.s[seatId];
+              if (typeof stationData === 'number' && stations[stationData] !== undefined) {
+                seatSelectionsWithNames[seatId] = stations[stationData];
+              } else if (stationData === 'E') {
+                seatSelectionsWithNames[seatId] = '員工';
+              }
             }
           }
         }
 
-        const lastFilterName = (hashData.f !== null && stations[hashData.f]) ? stations[hashData.f] : null;
+        let carPerspectives = {};
+        if (hashData.p) {
+          if (typeof hashData.p === 'string') {
+            for (let i = 0; i < hashData.p.length; i++) {
+              carPerspectives[startCar + i] = hashData.p[i] === '1';
+            }
+          } else {
+            carPerspectives = hashData.p;
+          }
+        }
+
+        const lastFilterName = (hashData.f != null && stations[hashData.f]) ? stations[hashData.f] : null;
 
         const fullData = {
           numCars: hashData.n,
           startCar: hashData.c,
           stations: stations,
           seatSelections: seatSelectionsWithNames,
-          carPerspectives: hashData.p,
+          carPerspectives: carPerspectives,
           lastFilter: lastFilterName
         };
 
@@ -1326,7 +1398,7 @@
     function showHandoverQRCode() {
       const dataToEncode = generateExportUrl();
       const encodedData = encodeURIComponent(dataToEncode);
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=H&format=svg&data=${encodedData}`;
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=M&format=svg&data=${encodedData}`;
 
       qrCodeDisplay.innerHTML = '';
 
@@ -1352,6 +1424,25 @@
 
     function scrollToBottom() {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+
+    function filterTrainButtons(query) {
+      const quickImportArea = document.querySelector('.quick-import-area:not(.station-filter-area)');
+      const buttonGroups = quickImportArea.querySelectorAll('.quick-import-buttons');
+
+      buttonGroups.forEach(group => {
+        const label = group.previousElementSibling;
+        let anyVisible = false;
+
+        group.querySelectorAll('button').forEach(button => {
+          const trainNumber = button.textContent.replace('次', '');
+          const show = !query || trainNumber.includes(query);
+          button.style.display = show ? '' : 'none';
+          if (show) anyVisible = true;
+        });
+
+        if (label) label.style.display = anyVisible ? '' : 'none';
+      });
     }
 
     window.onclick = function (event) {
