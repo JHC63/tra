@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>自由座管理 - JR Style</title>
+  <title>自由座管理</title>
   <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
   <style>
     /* JR West 風格設計 */
     :root {
@@ -212,6 +214,12 @@
       box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
     }
 
+    #train-filter-input:focus {
+      outline: none;
+      border-color: var(--jr-blue);
+      box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+    }
+
     /* 按鈕樣式 */
     button {
       padding: 12px 24px;
@@ -284,7 +292,8 @@
       table-layout: fixed;
     }
 
-    th, td {
+    th,
+    td {
       border: 2px solid var(--jr-border);
       text-align: center;
       vertical-align: middle;
@@ -309,27 +318,27 @@
     td.combined-seat-cell {
       /* 4個座位 + 1個走道 = 5列，每列 20% (表格有 8 個座位列 + 1 個走道列，座位共佔 80%，走道 20%) */
       /* 調整為 4 個座位，走道佔據一格寬度，總共 5 個寬度單元 */
-      width: 20%; 
+      width: 24%;
       height: var(--seat-cell-height);
       font-weight: 700;
       background: white;
       color: var(--jr-text);
       cursor: pointer;
-      padding: 0; 
+      padding: 0;
       position: relative;
       transition: all 0.2s ease;
-      overflow: hidden; 
+      overflow: hidden;
     }
 
     td.combined-seat-cell:hover {
       background: var(--jr-blue-light);
-      transform: scale(1.02); 
+      transform: scale(1.02);
     }
 
     /* 走道寬度調整為一個座位寬度 */
     .aisle {
       background: #e0e0e0;
-      width: 20%; 
+      width: 4%;
     }
 
     /* 顯示內容的基礎樣式 */
@@ -342,37 +351,46 @@
       position: absolute;
       top: 0;
       left: 0;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: all 0.3s ease;
     }
 
     /* 預設顯示座號 */
     .seat-number {
       font-size: var(--font-size-large);
       color: var(--jr-text);
-      opacity: 1; /* 默認顯示座號 */
+      opacity: 1;
+      z-index: 2;
     }
 
     /* 站名標籤樣式 */
     .station-label {
-      font-size: 16px; /* 調整字體大小以容納站名 */
+      font-size: 18px;
       font-weight: 600;
-      color: white; 
-      background: var(--jr-blue); 
+      color: white;
+      background: transparent;
       line-height: 1.2;
       padding: 5px 2px;
       word-break: break-word;
       text-align: center;
+      opacity: 0;
+      z-index: 1;
     }
 
-    /* 選中狀態 (有下車站名稱) */
+    /* 選中狀態 - 座號縮到右上角 */
     td.combined-seat-cell.selected .seat-number {
-      opacity: 0; /* 隱藏座號 */
+      font-size: 12px;
+      opacity: 0.7;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 2px 4px 0 0;
+      color: #fff;
     }
 
+    /* 選中狀態 - 站名居中顯示 */
     td.combined-seat-cell.selected .station-label {
-      opacity: 1; /* 顯示站名 */
+      opacity: 1;
     }
+
     /* --- 結束新座位單元格樣式 --- */
 
     /* Modal 樣式 */
@@ -405,6 +423,7 @@
         opacity: 0;
         transform: translateY(-50px);
       }
+
       to {
         opacity: 1;
         transform: translateY(0);
@@ -471,15 +490,6 @@
     .mobile-action-bar {
       display: none;
     }
-    
-    /* === 新增：按下顯示座號按鈕時的樣式 === */
-    body.show-all-numbers .seat-number {
-  opacity: 1 !important;
-}
-body.show-all-numbers .station-label {
-  opacity: 0 !important;
-}
-    /* === 結束新增樣式 === */
 
     /* 響應式設計 */
     @media (max-width: 768px) {
@@ -489,7 +499,7 @@ body.show-all-numbers .station-label {
         --font-size-xlarge: 24px;
         --font-size-button: 18px;
         --font-size-tab: 22px;
-        --seat-cell-height: 60px;
+        --seat-cell-height: 85px;
       }
 
       body {
@@ -546,10 +556,10 @@ body.show-all-numbers .station-label {
 
       /* 調整手機版的座位格子大小 */
       td.combined-seat-cell {
-        width: 20%;
+        width: 24%;
         font-size: 16px;
       }
-      
+
       .seat-number {
         font-size: 18px;
       }
@@ -558,7 +568,8 @@ body.show-all-numbers .station-label {
         font-size: 18px;
       }
 
-      th, td {
+      th,
+      td {
         padding: 6px 2px;
       }
 
@@ -581,43 +592,16 @@ body.show-all-numbers .station-label {
         border-top: 3px solid var(--jr-blue);
       }
 
-      .mobile-action-bar button {
+            .mobile-action-bar button {
         flex: 1;
-        margin: 0 5px;
-        padding: 12px 8px;
-        font-size: 16px;
+        margin: 0 3px;         /* 縮小按鈕之間的間距 */
+        padding: 10px 2px;     /* 縮小內距以容納更多按鈕 */
+        font-size: 14px;       /* 稍微調小字體 */
+        white-space: nowrap;   /* 防止文字因寬度不足而換行 */
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-
-/* 懸浮滾動按鈕樣式 */
-.scroll-buttons-container {
-  position: fixed;
-  bottom: 100px; /* 避開底部的 mobile-action-bar */
-  right: 20px;
-  z-index: 900;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.scroll-buttons-container button {
-  width: 50px;
-  height: 50px;
-  font-size: 24px;
-  padding: 0;
-  border-radius: 50%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-/* 確保手機版時按鈕位置正確 */
-@media (max-width: 768px) {
-  .scroll-buttons-container {
-    bottom: 90px; /* 手機版底部操作列更高 */
-  }
-}
 
       #modal-station-buttons {
         grid-template-columns: repeat(4, 1fr);
@@ -636,6 +620,7 @@ body.show-all-numbers .station-label {
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div class="header">
@@ -650,28 +635,44 @@ body.show-all-numbers .station-label {
 
     <div id="settings-tab" class="tab-content active">
       <div class="quick-import-area">
-        <div class="quick-import-buttons">
+        <div style="margin-bottom: 15px;">
+          <input type="text" id="train-filter-input" inputmode="numeric" placeholder="輸入數字篩選車次"
+            oninput="filterTrainButtons(this.value)"
+            style="width: 100%; padding: 12px 16px; font-size: var(--font-size-base); border: 2px solid var(--jr-border); border-radius: 8px; transition: border-color 0.3s ease;">
+        </div>
+        <div style="margin-bottom: 8px; font-weight: 700; color: var(--jr-blue); font-size: var(--font-size-base);">
+          直達車（9車）</div>
+        <div class="quick-import-buttons" style="margin-bottom: 20px;">
           <button onclick="importQuickData('110次')">110次</button>
-          <button onclick="importQuickData('111次')">111次</button>
-          <button onclick="importQuickData('116次')">116次</button>
-          <button onclick="importQuickData('117次')">117次</button>
-          <button onclick="importQuickData('119次')">119次</button>
-          <button onclick="importQuickData('120次')">120次</button>
-          <button onclick="importQuickData('127次')">127次</button>
-          <button onclick="importQuickData('131次')">131次</button>
           <button onclick="importQuickData('132次')">132次</button>
-          <button onclick="importQuickData('133次')">133次</button>
-          <button onclick="importQuickData('143次')">143次</button>
-          <button onclick="importQuickData('145次')">145次</button>
-          <button onclick="importQuickData('146次')">146次</button>
-          <button onclick="importQuickData('148次')">148次</button>
+          <button onclick="importQuickData('136次')">136次</button>
           <button onclick="importQuickData('154次')">154次</button>
-          <button onclick="importQuickData('158次')">158次</button>
-          <button onclick="importQuickData('160次')">160次</button>
+          <button onclick="importQuickData('194次')">194次</button>
+          <button onclick="importQuickData('111次')">111次</button>
+          <button onclick="importQuickData('131次')">131次</button>
+          <button onclick="importQuickData('137次')">137次</button>
+          <button onclick="importQuickData('143次')">143次</button>
           <button onclick="importQuickData('191次')">191次</button>
           <button onclick="importQuickData('193次')">193次</button>
-          <button onclick="importQuickData('194次')">194次</button>
+        </div>
+        <div style="margin-bottom: 8px; font-weight: 700; color: var(--jr-blue); font-size: var(--font-size-base);">
+          非直達車（9-11車）</div>
+        <div class="quick-import-buttons">
+          <button onclick="importQuickData('108次')">108次</button>
+          <button onclick="importQuickData('116次')">116次</button>
+          <button onclick="importQuickData('120次')">120次</button>
+          <button onclick="importQuickData('144次')">144次</button>
+          <button onclick="importQuickData('146次')">146次</button>
+          <button onclick="importQuickData('172次')">172次</button>
+          <button onclick="importQuickData('180次')">180次</button>
           <button onclick="importQuickData('196次')">196次</button>
+          <button onclick="importQuickData('117次')">117次</button>
+          <button onclick="importQuickData('121次')">121次</button>
+          <button onclick="importQuickData('125次')">125次</button>
+          <button onclick="importQuickData('133次')">133次</button>
+          <button onclick="importQuickData('139次')">139次</button>
+          <button onclick="importQuickData('145次')">145次</button>
+          <button onclick="importQuickData('179次')">179次</button>
         </div>
       </div>
 
@@ -687,7 +688,7 @@ body.show-all-numbers .station-label {
 
       <h2 class="section-title">停靠站設定</h2>
       <div id="stations-container"></div>
-      
+
       <div class="button-group">
         <button onclick="addStationField()">➕ 新增停靠站</button>
         <button onclick="confirmSettings()">✅ 確定</button>
@@ -698,8 +699,8 @@ body.show-all-numbers .station-label {
     <div id="charts-tab" class="tab-content">
       <div class="desktop-actions" style="margin-bottom: 20px; text-align: center;">
         <button class="undo-button" onclick="undoLastAction()" title="上一步">↩️</button>
-        <button onclick="exportSeatingCharts()">💾 存檔/複製網址</button>
-        <button onclick="showHandoverQRCode()">📱 生成QRcode</button>
+        <button onclick="exportSeatingCharts()">💾 存檔</button>
+        <button onclick="showHandoverQRCode()">📱 QR</button>
       </div>
 
       <div class="quick-import-area station-filter-area">
@@ -712,17 +713,16 @@ body.show-all-numbers .station-label {
 
   <div id="message-box" class="message-box"></div>
 
-   <div id="startup-modal" class="modal">
+  <div id="startup-modal" class="modal">
     <div class="modal-content">
       <span class="close-button" onclick="closeStartupModal()">&times;</span>
       <h2>⚠️ 使用注意事項</h2>
       <div style="text-align: left; line-height: 1.8; font-size: var(--font-size-base);">
         <p style="color: #f44336; font-weight: 700; margin: 15px 0;">1. 勿在 LINE 直接點擊網址使用本網頁！</p>
         <p style="margin: 15px 0;">2. 本網頁是以網址紀錄當下表格狀態，驗票後或接班時記得先點擊「存檔」按鈕，並請不要關閉網頁以防資料遺失。</p>
-        <p style="margin: 15px 0;">3.按住🔢此按鈕可顯示全部座號。</p>
-        <p style="margin: 15px 0;">4. <a href="https://jhc63.github.io/tra/newcarriageqr.html" target="_blank" style="color: var(--jr-blue); text-decoration: underline;">列車編組QRcode生成</a></p>
-         <p style="margin: 15px 0;">5.祝各位師傅跑車平安順風。</p>
-         
+        <p style="margin: 15px 0;">3. <a href="https://jhc63.github.io/tra/newcarriageqr.html" target="_blank"
+            style="color: var(--jr-blue); text-decoration: underline;">列車編組QRcode生成</a></p>
+        <p style="margin: 15px 0;">4.祝各位師傅跑車平安順風。</p>
       </div>
       <div style="text-align: center; margin-top: 25px;">
         <button onclick="closeStartupModal()">✅ 收到</button>
@@ -730,7 +730,7 @@ body.show-all-numbers .station-label {
     </div>
   </div>
 
-   <div id="station-modal" class="modal">
+  <div id="station-modal" class="modal">
     <div class="modal-content">
       <span class="close-button" onclick="closeStationModal()">&times;</span>
       <h2>選擇下車站</h2>
@@ -738,25 +738,89 @@ body.show-all-numbers .station-label {
     </div>
   </div>
 
-   <div id="qrcode-modal" class="modal">
+  <div id="qrcode-modal" class="modal">
     <div class="modal-content">
       <span class="close-button" onclick="closeQRCodeModal()">&times;</span>
       <h2>交班 QR Code</h2>
       <div id="qrcode-display" style="display: flex; justify-content: center; padding: 20px;"></div>
       <p style="text-align: center; margin-top: 15px; font-size: var(--font-size-base);">
-        請用手勢將圖片放大方便對方掃描。如 QR code 錯誤，請點擊「存檔」按鈕(會自動複製網址）後到 
-        <a href="https://qrcode-generator.tw/" target="_blank" style="color: var(--jr-blue);">其他網站</a> 貼上網址生成。
+        請用手勢將圖片放大方便對方掃描。如 QR code 錯誤，請點擊「存檔」按鈕後到
+        <a href="https://qrcode-generator.tw/" target="_blank" style="color: var(--jr-blue);">其他網站</a> 生成。
       </p>
     </div>
   </div>
 
-   <div class="mobile-action-bar">
+  <div class="mobile-action-bar">
     <button onclick="undoLastAction()" title="上一步">↩️</button>
     <button onclick="exportSeatingCharts()">💾 存檔</button>
     <button onclick="showHandoverQRCode()">📱 QR</button>
+    <button onclick="scrollToTop()" title="回頂端">⏫</button>
+    <button onclick="scrollToBottom()" title="到底部">⏬</button>
   </div>
 
   <script>
+    // TDX API 憑證 (請填寫您的 TDX App ID 和 Key)
+    const APP_ID = ' '; // 填入您的 TDX App ID
+    const APP_KEY = ' '; // 填入您的 TDX App Key
+
+    // TDX API 授權頭函數
+    function getAuthorizationHeader() {
+      const gmtString = new Date().toUTCString();
+      const hmac = CryptoJS.HmacSHA1(`x-date: ${gmtString}`, APP_KEY);
+      const base64Hmac = CryptoJS.enc.Base64.stringify(hmac);
+      return {
+        'Authorization': `hmac username="${APP_ID}", algorithm="hmac-sha1", headers="x-date", signature="${base64Hmac}"`,
+        'X-Date': gmtString
+      };
+    }
+
+    // 取得今日日期
+    function getTodayDate() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    // 從 TDX API 抓取停靠站
+    async function fetchStationsFromTDX(trainNo, callback) {
+      if (!trainNo || APP_ID === '' || APP_KEY === '') {
+        showMessage('⚠️ 請設定 TDX 金鑰，改為手動輸入停靠站');
+        return;
+      }
+      showMessage('查詢中...');
+
+      const trainDate = getTodayDate();
+      const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/TRA/DailyTimetable/Today/TrainNo/${trainNo}?%24format=JSON`;
+
+      try {
+        const response = await fetch(apiUrl, { headers: getAuthorizationHeader() });
+        if (!response.ok) throw new Error(`API 請求失敗: ${response.status}`);
+        const data = await response.json();
+        if (!data || data.length === 0 || !data[0].StopTimes) {
+          showMessage(`⚠️ 找不到今日 ${trainNo} 車次的時刻表資訊，請手動輸入停靠站`);
+          return;
+        }
+
+        let lastDepartureTime = null;
+        let dayOffset = 0;
+        const stationData = data[0].StopTimes.map(stop => {
+          if (lastDepartureTime && stop.DepartureTime < lastDepartureTime) {
+            dayOffset++;
+          }
+          lastDepartureTime = stop.DepartureTime;
+          return {
+            ...stop,
+            dayOffset: dayOffset
+          };
+        });
+
+        const stations = stationData.map(stop => stop.StationName.Zh_tw);
+        callback(stations);
+        showMessage(`✅ 已載入 ${trainNo} 次停靠站`);
+      } catch (error) {
+        showMessage(`⚠️ 查詢失敗: ${error.message}，請手動輸入停靠站`);
+      }
+    }
+
     // 座位配置 (2+2 排列)
     const seatLayout = [
       [1, 3, 4, 2], [5, 7, 8, 6], [9, 11, 12, 10], [13, 15, 16, 14],
@@ -777,27 +841,32 @@ body.show-all-numbers .station-label {
 
     // 列車預設資料
     const trainDataPresets = {
-      '110次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
-      '111次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "桃園", "臺中", "嘉義", "臺南", "高雄", "屏東", "潮州", "枋寮"] },
-      '116次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗南", "斗六", "員林", "彰化", "臺中", "豐原", "苗栗", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
-      '117次': { numCars: 3, startCar: 9, stations: ["基隆", "八堵", "七堵", "汐止", "南港", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "苗栗", "豐原", "臺中", "彰化", "員林", "斗六", "民雄", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
-      '119次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
-      '120次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
-      '127次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
-      '131次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "新竹", "臺中", "彰化", "嘉義", "臺南", "高雄", "屏東", "潮州"] },
-      '132次': { numCars: 1, startCar: 9, stations: ["枋寮", "潮州", "屏東", "高雄", "臺南", "嘉義", "彰化", "臺中", "新竹", "板橋", "臺北", "松山", "南港", "七堵"] },
-      '133次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "大肚", "彰化", "員林", "斗六", "嘉義", "新營", "善化", "臺南", "新左營", "高雄", "鳳山", "屏東", "潮州"] },
-      '143次': { numCars: 1, startCar: 9, stations: ["七堵", "汐止", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化", "嘉義", "臺南", "高雄", "鳳山", "屏東", "潮州"] },
-      '145次': { numCars: 3, startCar: 9, stations: ["七堵", "汐止", "松山", "臺北", "板橋", "桃園", "中壢", "新竹", "竹南", "後龍", "通霄", "苑裡", "大甲", "清水", "沙鹿", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "九曲堂", "屏東", "潮州"] },
-      '146次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "九曲堂", "鳳山", "高雄", "新左營", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
-      '148次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
-      '154次': { numCars: 1, startCar: 9, stations: ["潮州", "屏東", "高雄", "臺南", "嘉義", "臺中", "桃園", "板橋", "臺北", "松山", "南港"] },
-      '158次': { numCars: 3, startCar: 9, stations: ["彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
-      '160次': { numCars: 3, startCar: 9, stations: ["田中", "社頭", "員林", "彰化", "沙鹿", "清水", "大甲", "苑裡", "通霄", "後龍", "竹南", "新竹", "中壢", "桃園", "板橋", "臺北", "松山", "汐止", "七堵"] },
-       '191次': { numCars: 3, startCar: 9, stations: ["臺中", "彰化", "員林", "斗六", "嘉義", "新營", "臺南", "岡山", "新左營", "高雄", "鳳山", "屏東", "潮州"] },
-      '193次': { numCars: 1, startCar: 9, stations: ["七堵", "南港", "松山", "臺北", "板橋", "豐原", "臺中", "彰化"] },
-      '194次': { numCars: 1, startCar: 9, stations: ["彰化", "臺中", "豐原", "板橋", "臺北", "松山", "南港", "七堵"] },
-      '196次': { numCars: 3, startCar: 9, stations: ["潮州", "屏東", "鳳山", "高雄", "新左營", "岡山", "臺南", "新營", "嘉義", "斗六", "員林", "彰化", "臺中"] }
+      '110次': { numCars: 1, startCar: 9 },
+      '132次': { numCars: 1, startCar: 9 },
+      '136次': { numCars: 1, startCar: 9 },
+      '154次': { numCars: 1, startCar: 9 },
+      '194次': { numCars: 1, startCar: 9 },
+      '111次': { numCars: 1, startCar: 9 },
+      '131次': { numCars: 1, startCar: 9 },
+      '137次': { numCars: 1, startCar: 9 },
+      '143次': { numCars: 1, startCar: 9 },
+      '191次': { numCars: 1, startCar: 9 },
+      '193次': { numCars: 1, startCar: 9 },
+      '108次': { numCars: 3, startCar: 9 },
+      '116次': { numCars: 3, startCar: 9 },
+      '120次': { numCars: 3, startCar: 9 },
+      '144次': { numCars: 3, startCar: 9 },
+      '146次': { numCars: 3, startCar: 9 },
+      '172次': { numCars: 3, startCar: 9 },
+      '180次': { numCars: 3, startCar: 9 },
+      '196次': { numCars: 3, startCar: 9 },
+      '117次': { numCars: 3, startCar: 9 },
+      '121次': { numCars: 3, startCar: 9 },
+      '125次': { numCars: 3, startCar: 9 },
+      '133次': { numCars: 3, startCar: 9 },
+      '139次': { numCars: 3, startCar: 9 },
+      '145次': { numCars: 3, startCar: 9 },
+      '179次': { numCars: 3, startCar: 9 }
     };
 
     // 狀態管理
@@ -806,12 +875,10 @@ body.show-all-numbers .station-label {
       const startCar = document.getElementById('start-car').value;
       const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
       const seatSelections = {};
-      
-      // 注意：查找元素變更為新的 label ID
+
       document.querySelectorAll('.station-label').forEach(label => {
         if (label.textContent) {
-          // label ID 格式為 'label-9-1'，取後面部分 '9-1'
-          seatSelections[label.id.substring(6)] = label.textContent; 
+          seatSelections[label.id.substring(6)] = label.textContent;
         }
       });
 
@@ -830,17 +897,17 @@ body.show-all-numbers .station-label {
 
     function loadState(state) {
       if (!state) return;
-      
+
       document.getElementById('num-cars').value = state.numCars || defaultNumCars;
       document.getElementById('start-car').value = state.startCar || defaultStartCar;
-      
+
       const stationsContainer = document.getElementById('stations-container');
       stationsContainer.innerHTML = '';
       (state.stations || []).forEach(station => {
         addStationField();
         stationsContainer.lastElementChild.querySelector('input').value = station;
       });
-      
+
       while (stationsContainer.children.length < defaultStationFields) {
         addStationField();
       }
@@ -852,21 +919,17 @@ body.show-all-numbers .station-label {
 
       confirmSettings(false);
 
-      setTimeout(() => {
-        if (state.seatSelections) {
-          document.querySelectorAll('.station-label').forEach(label => {
-            // 從 label ID (label-9-1) 取得 seatIdBase (9-1)
-            const seatIdBase = label.id.substring(6); 
-            const stationName = state.seatSelections[seatIdBase] || '';
-            label.textContent = stationName;
-            // 呼叫新的 toggleSeatColor
-            toggleSeatColor(seatIdBase, stationName); 
-          });
-        }
-        if (state.lastFilter && currentStations.includes(state.lastFilter)) {
-          updateStations(state.lastFilter, currentStations);
-        }
-      }, 50);
+      if (state.seatSelections) {
+        document.querySelectorAll('.station-label').forEach(label => {
+          const seatIdBase = label.id.substring(6);
+          const stationName = state.seatSelections[seatIdBase] || '';
+          label.textContent = stationName;
+          toggleSeatColor(seatIdBase, stationName);
+        });
+      }
+      if (state.lastFilter && currentStations.includes(state.lastFilter)) {
+        applyFilterVisual(state.lastFilter, currentStations);
+      }
     }
 
     function undoLastAction() {
@@ -878,7 +941,6 @@ body.show-all-numbers .station-label {
       }
     }
 
-    // 分頁切換
     function openTab(evt, tabId) {
       document.querySelectorAll(".tab-content").forEach(tc => tc.classList.remove("active"));
       document.querySelectorAll(".tab-button").forEach(tb => tb.classList.remove("active"));
@@ -887,7 +949,6 @@ body.show-all-numbers .station-label {
       if (button) button.classList.add("active");
     }
 
-    // 停靠站管理
     function addStationField() {
       const container = document.getElementById('stations-container');
       const index = container.children.length + 1;
@@ -900,8 +961,9 @@ body.show-all-numbers .station-label {
       container.appendChild(newField);
     }
 
-    function resetSettingsToDefault(skipConfirm = false) { if (!skipConfirm && !confirm('確定要清空所有設定嗎？')) return; 
-      
+    function resetSettingsToDefault(skipConfirm = false, showMsg = true) {
+      if (!skipConfirm && !confirm('確定要清空所有設定嗎？')) return;
+
       document.getElementById('num-cars').value = defaultNumCars;
       document.getElementById('start-car').value = defaultStartCar;
       const container = document.getElementById('stations-container');
@@ -915,7 +977,7 @@ body.show-all-numbers .station-label {
       Object.keys(carPerspectiveState).forEach(key => delete carPerspectiveState[key]);
       history = [];
       historyPointer = -1;
-      showMessage('已清空所有設定');
+      if (showMsg) showMessage('已清空所有設定');
     }
 
     function confirmSettings(saveToHistory = true) {
@@ -931,10 +993,10 @@ body.show-all-numbers .station-label {
 
       const output = document.getElementById('seating-charts');
       output.innerHTML = '';
-      
+
       const globalStationButtonsContainer = document.getElementById('global-station-buttons');
       globalStationButtonsContainer.innerHTML = '';
-      
+
       currentStations.forEach(station => {
         const button = document.createElement('button');
         button.textContent = station;
@@ -954,31 +1016,35 @@ body.show-all-numbers .station-label {
 
       if (saveToHistory) saveState();
       openTab(null, 'charts-tab');
-      //showMessage('已恢復上一動作！');
     }
 
-    // 座位表生成
     function generateSeatingChart(carNumber, stations, isFlipped) {
       const carContainer = document.createElement('div');
       carContainer.className = 'car-chart-container';
       carContainer.id = `car-chart-${carNumber}`;
 
-      const title = document.createElement('h3');
-      title.style.cssText = 'text-align: center; color: var(--jr-blue); font-size: var(--font-size-xlarge); margin-bottom: 15px;';
-      title.textContent = `第 ${carNumber} 車`; carContainer.appendChild(title);
-
       const tableWrapper = document.createElement('div');
       tableWrapper.className = 'table-wrapper';
-      
+
       const table = document.createElement('table');
       let displaySeatLayout = JSON.parse(JSON.stringify(seatLayout));
-      
+
       if (isFlipped) {
         displaySeatLayout.forEach(row => row.reverse());
         displaySeatLayout.reverse();
       }
 
       let html = `
+        <colgroup>
+          <col style="width: 24%;">
+          <col style="width: 24%;">
+          <col style="width: 4%;">
+          <col style="width: 24%;">
+          <col style="width: 24%;">
+        </colgroup>
+        <tr>
+          <th colspan="5">第 ${carNumber} 車</th>
+        </tr>
         <tr>
           <th class="label">窗戶</th>
           <th class="label">走道</th>
@@ -992,14 +1058,12 @@ body.show-all-numbers .station-label {
         html += '<tr>';
         row.forEach((seatNum, index) => {
           const seatIdBase = `${carNumber}-${seatNum}`;
-          
-          // 合併後的單元格
+
           html += `<td class="combined-seat-cell" onclick="openStationModal('${seatIdBase}')" id="cell-${seatIdBase}">
             <span class="seat-display seat-number" id="seat-num-${seatIdBase}">${seatNum}</span>
             <span class="seat-display station-label" id="label-${seatIdBase}"></span>
           </td>`;
 
-          // 走道分隔線 (在 A/C 之後，即 index === 1)
           if (index === 1) {
             html += '<td class="aisle"></td>';
           }
@@ -1033,22 +1097,17 @@ body.show-all-numbers .station-label {
       return carContainer;
     }
 
-    /**
-     * 根據是否有站名來切換單元格的顯示狀態 (座號/站名)
-     * @param {string} seatIdBase - 座位 ID (e.g. '9-1')
-     * @param {string} stationName - 下車站名稱或空字串
-     */
     function toggleSeatColor(seatIdBase, stationName) {
-      const cellElement = document.getElementById(`cell-${seatIdBase}`); // 整個 td
-      const labelElement = document.getElementById(`label-${seatIdBase}`); // 站名 span
+      const cellElement = document.getElementById(`cell-${seatIdBase}`);
+      const labelElement = document.getElementById(`label-${seatIdBase}`);
 
       if (cellElement && labelElement) {
         if (stationName) {
           cellElement.classList.add('selected');
-          labelElement.style.backgroundColor = '#4caf50'; 
+          labelElement.style.backgroundColor = '#4caf50';
         } else {
           cellElement.classList.remove('selected');
-          labelElement.style.backgroundColor = ''; 
+          labelElement.style.backgroundColor = 'transparent';
         }
       }
     }
@@ -1056,7 +1115,7 @@ body.show-all-numbers .station-label {
     function updateStations(selectedStation, stations) {
       lastActiveStationFilter = selectedStation;
       const selectedIndex = stations.indexOf(selectedStation);
-      
+
       document.querySelectorAll('#global-station-buttons button').forEach(button => {
         const buttonIndex = stations.indexOf(button.textContent);
         if (button.textContent === selectedStation) {
@@ -1067,7 +1126,6 @@ body.show-all-numbers .station-label {
         button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
       });
 
-      // 篩選掉所有已過站或不是員工的標記
       document.querySelectorAll('.station-label').forEach(label => {
         const stationName = label.textContent;
         if (stationName && stationName !== '員工' && stations.indexOf(stationName) <= selectedIndex) {
@@ -1078,13 +1136,27 @@ body.show-all-numbers .station-label {
       });
     }
 
+    function applyFilterVisual(selectedStation, stations) {
+      lastActiveStationFilter = selectedStation;
+      const selectedIndex = stations.indexOf(selectedStation);
+
+      document.querySelectorAll('#global-station-buttons button').forEach(button => {
+        const buttonIndex = stations.indexOf(button.textContent);
+        if (button.textContent === selectedStation) {
+          button.classList.add('active-filter');
+        } else {
+          button.classList.remove('active-filter');
+        }
+        button.style.display = buttonIndex < selectedIndex ? 'none' : 'inline-block';
+      });
+    }
+
     function toggleIndividualPerspective(carNumber, stations) {
       carPerspectiveState[carNumber] = !carPerspectiveState[carNumber];
       const oldCarChartContainer = document.getElementById(`car-chart-${carNumber}`);
-      
+
       if (oldCarChartContainer) {
         const currentCarSelections = {};
-        // 獲取當前車廂所有座位的站名
         oldCarChartContainer.querySelectorAll('.station-label').forEach(label => {
           currentCarSelections[label.id.substring(6)] = label.textContent;
         });
@@ -1092,7 +1164,6 @@ body.show-all-numbers .station-label {
         const newCarChartContainer = generateSeatingChart(carNumber, stations, carPerspectiveState[carNumber]);
         oldCarChartContainer.parentNode.replaceChild(newCarChartContainer, oldCarChartContainer);
 
-        // 將站名數據重新載入到新的表格結構中
         for (const seatIdBase in currentCarSelections) {
           const stationName = currentCarSelections[seatIdBase];
           const labelElement = document.getElementById(`label-${seatIdBase}`);
@@ -1104,37 +1175,50 @@ body.show-all-numbers .station-label {
       }
     }
 
-    // 匯出與匯入
     function generateExportUrl() {
       const stations = Array.from(document.querySelectorAll('.station-input')).map(input => input.value.trim());
-      const seatSelections = {};
-      
-      document.querySelectorAll('.station-label').forEach(label => {
-        if (label.textContent) {
-          const stationIndex = stations.indexOf(label.textContent);
-          // label ID 格式為 'label-9-1'，取後面部分 '9-1'
-          const seatIdBase = label.id.substring(6); 
-          
-          if (stationIndex > -1) {
-            seatSelections[seatIdBase] = stationIndex;
-          } else if (label.textContent === '員工') {
-            seatSelections[seatIdBase] = 'E';
+      const numCars = parseInt(document.getElementById('num-cars').value) || defaultNumCars;
+      const startCar = parseInt(document.getElementById('start-car').value) || defaultStartCar;
+
+      const seatStrings = [];
+      for (let car = startCar; car < startCar + numCars; car++) {
+        let carStr = '';
+        for (let seatNum = 1; seatNum <= 52; seatNum++) {
+          const label = document.getElementById(`label-${car}-${seatNum}`);
+          if (label && label.textContent) {
+            const stationIndex = stations.indexOf(label.textContent);
+            if (stationIndex > -1) {
+              carStr += stationIndex.toString(36);
+            } else if (label.textContent === '員工') {
+              carStr += 'E';
+            } else {
+              carStr += '-';
+            }
+          } else {
+            carStr += '-';
           }
         }
-      });
+        seatStrings.push(carStr.replace(/-+$/, ''));
+      }
+
+      let pStr = '';
+      for (let car = startCar; car < startCar + numCars; car++) {
+        pStr += carPerspectiveState[car] ? '1' : '0';
+      }
 
       const filterIndex = lastActiveStationFilter ? stations.indexOf(lastActiveStationFilter) : -1;
 
-      const shortKeyExportData = {
-        n: document.getElementById('num-cars').value,
-        c: document.getElementById('start-car').value,
-        t: stations,
-        s: seatSelections,
-        p: carPerspectiveState,
-        f: filterIndex > -1 ? filterIndex : null
+      const exportData = {
+        n: numCars.toString(),
+        c: startCar.toString(),
+        t: stations
       };
+      const hasSeats = seatStrings.some(s => s.length > 0);
+      if (hasSeats) exportData.s = seatStrings;
+      if (pStr.includes('1')) exportData.p = pStr;
+      if (filterIndex > -1) exportData.f = filterIndex;
 
-      const hash = LZString.compressToEncodedURIComponent(JSON.stringify(shortKeyExportData));
+      const hash = LZString.compressToEncodedURIComponent(JSON.stringify(exportData));
       return `${window.location.href.split('#')[0]}#${hash}`;
     }
 
@@ -1146,7 +1230,10 @@ body.show-all-numbers .station-label {
         .catch(() => showMessage('⚠️ 複製失敗，請手動複製網址'));
     }
 
-    function loadSettingsFromHash() { if (!location.hash || location.hash.length <= 1) { // 傳入 true 跳過確認視窗 resetSettingsToDefault(true); openTab(null, 'settings-tab'); document.getElementById('startup-modal').style.display = 'block'; return; }
+    function loadSettingsFromHash() {
+      if (!location.hash || location.hash.length <= 1) {
+        resetSettingsToDefault(true, false);
+        openTab(null, 'settings-tab');
         document.getElementById('startup-modal').style.display = 'block';
         return;
       }
@@ -1154,30 +1241,63 @@ body.show-all-numbers .station-label {
       try {
         const decompressedString = LZString.decompressFromEncodedURIComponent(location.hash.substring(1));
         if (!decompressedString) throw new Error("Decompression failed");
-        
+
         const hashData = JSON.parse(decompressedString);
         const stations = hashData.t || [];
+        const numCars = parseInt(hashData.n) || defaultNumCars;
+        const startCar = parseInt(hashData.c) || defaultStartCar;
         const seatSelectionsWithNames = {};
-        
+
         if (hashData.s) {
-          for (const seatId in hashData.s) {
-            const stationData = hashData.s[seatId];
-            if (typeof stationData === 'number' && stations[stationData] !== undefined) {
-              seatSelectionsWithNames[seatId] = stations[stationData];
-            } else if (stationData === 'E') {
-              seatSelectionsWithNames[seatId] = '員工';
+          if (Array.isArray(hashData.s)) {
+            hashData.s.forEach((carStr, carIndex) => {
+              const carNumber = startCar + carIndex;
+              for (let i = 0; i < carStr.length; i++) {
+                const ch = carStr[i];
+                if (ch !== '-') {
+                  const seatId = `${carNumber}-${i + 1}`;
+                  if (ch === 'E') {
+                    seatSelectionsWithNames[seatId] = '員工';
+                  } else {
+                    const stationIndex = parseInt(ch, 36);
+                    if (stations[stationIndex] !== undefined) {
+                      seatSelectionsWithNames[seatId] = stations[stationIndex];
+                    }
+                  }
+                }
+              }
+            });
+          } else {
+            for (const seatId in hashData.s) {
+              const stationData = hashData.s[seatId];
+              if (typeof stationData === 'number' && stations[stationData] !== undefined) {
+                seatSelectionsWithNames[seatId] = stations[stationData];
+              } else if (stationData === 'E') {
+                seatSelectionsWithNames[seatId] = '員工';
+              }
             }
           }
         }
 
-        const lastFilterName = (hashData.f !== null && stations[hashData.f]) ? stations[hashData.f] : null;
+        let carPerspectives = {};
+        if (hashData.p) {
+          if (typeof hashData.p === 'string') {
+            for (let i = 0; i < hashData.p.length; i++) {
+              carPerspectives[startCar + i] = hashData.p[i] === '1';
+            }
+          } else {
+            carPerspectives = hashData.p;
+          }
+        }
+
+        const lastFilterName = (hashData.f != null && stations[hashData.f]) ? stations[hashData.f] : null;
 
         const fullData = {
           numCars: hashData.n,
           startCar: hashData.c,
           stations: stations,
           seatSelections: seatSelectionsWithNames,
-          carPerspectives: hashData.p,
+          carPerspectives: carPerspectives,
           lastFilter: lastFilterName
         };
 
@@ -1194,27 +1314,47 @@ body.show-all-numbers .station-label {
 
     function importQuickData(trainName) {
       const preset = trainDataPresets[trainName];
-      if (preset) {
-        loadState(preset);
-        saveState();
-        showMessage(`✅ 已載入 ${trainName} 設定`);
+      if (!preset) {
+        showMessage(`⚠️ 無 ${trainName} 預設資料`);
+        return;
       }
+
+      const trainNo = trainName.replace('次', '');
+      fetchStationsFromTDX(trainNo, (stations) => {
+        if (!stations) return;
+
+        document.getElementById('num-cars').value = preset.numCars || defaultNumCars;
+        document.getElementById('start-car').value = preset.startCar || defaultStartCar;
+
+        const stationsContainer = document.getElementById('stations-container');
+        stationsContainer.innerHTML = '';
+        stations.forEach(station => {
+          addStationField();
+          stationsContainer.lastElementChild.querySelector('input').value = station;
+        });
+
+        while (stationsContainer.children.length < defaultStationFields) {
+          addStationField();
+        }
+
+        confirmSettings();
+        showMessage(`✅ 已載入 ${trainName} 設定`);
+      });
     }
 
-    // Modal 管理
     const stationModal = document.getElementById('station-modal');
     const qrCodeModal = document.getElementById('qrcode-modal');
     const qrCodeDisplay = document.getElementById('qrcode-display');
     const startupModal = document.getElementById('startup-modal');
 
-    let currentSeatIdBase = ''; // 用於記錄當前打開 Modal 的座位 ID
+    let currentSeatIdBase = '';
 
     function openStationModal(seatIdBase) {
       currentSeatIdBase = seatIdBase;
       stationModal.dataset.seatId = seatIdBase;
       const buttonContainer = document.getElementById('modal-station-buttons');
       buttonContainer.innerHTML = '';
-      
+
       const filterIndex = lastActiveStationFilter ? currentStations.indexOf(lastActiveStationFilter) : -1;
       const availableStations = currentStations.filter((_, index) => index > filterIndex);
 
@@ -1250,8 +1390,7 @@ body.show-all-numbers .station-label {
     function setStationForSeat(stationName, seatIdBase) {
       const label = document.getElementById(`label-${seatIdBase}`);
       if (label) label.textContent = stationName;
-      // 呼叫更新後的 toggleSeatColor
-      toggleSeatColor(seatIdBase, stationName); 
+      toggleSeatColor(seatIdBase, stationName);
       closeStationModal();
       saveState();
     }
@@ -1259,8 +1398,7 @@ body.show-all-numbers .station-label {
     function showHandoverQRCode() {
       const dataToEncode = generateExportUrl();
       const encodedData = encodeURIComponent(dataToEncode);
-      // 使用穩定且支援 SVG 的 QR Code API
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=H&format=svg&data=${encodedData}`;
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&ecc=M&format=svg&data=${encodedData}`;
 
       qrCodeDisplay.innerHTML = '';
 
@@ -1279,18 +1417,7 @@ body.show-all-numbers .station-label {
       messageBox.classList.add('show');
       setTimeout(() => messageBox.classList.remove('show'), 2500);
     }
-    
-    // === 新增：顯示/恢復座位號的函式 ===
-    function showAllSeatNumbers() {
-      document.body.classList.add('show-all-numbers');
-    }
 
-    function revertSeatDisplay() {
-      document.body.classList.remove('show-all-numbers');
-    }
-    // === 結束新增函式 ===
-
-    // 滾動功能
     function scrollToTop() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1299,23 +1426,37 @@ body.show-all-numbers .station-label {
       window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
-    // 點擊 Modal 外部關閉
-    window.onclick = function(event) {
+    function filterTrainButtons(query) {
+      const quickImportArea = document.querySelector('.quick-import-area:not(.station-filter-area)');
+      const buttonGroups = quickImportArea.querySelectorAll('.quick-import-buttons');
+
+      buttonGroups.forEach(group => {
+        const label = group.previousElementSibling;
+        let anyVisible = false;
+
+        group.querySelectorAll('button').forEach(button => {
+          const trainNumber = button.textContent.replace('次', '');
+          const show = !query || trainNumber.includes(query);
+          button.style.display = show ? '' : 'none';
+          if (show) anyVisible = true;
+        });
+
+        if (label) label.style.display = anyVisible ? '' : 'none';
+      });
+    }
+
+    window.onclick = function (event) {
       if (event.target == stationModal) closeStationModal();
       if (event.target == qrCodeModal) closeQRCodeModal();
       if (event.target == startupModal) closeStartupModal();
     }
 
-    // 初始化
-    window.onload = function() {
+    window.onload = function () {
       loadSettingsFromHash();
     };
   </script>
-<div class="scroll-buttons-container" id="scroll-buttons-container">
-    <button onclick="scrollToTop()" title="回頂端">⏫</button>
-    <button onmousedown="showAllSeatNumbers()" onmouseup="revertSeatDisplay()" ontouchstart="showAllSeatNumbers()" ontouchend="revertSeatDisplay()" title="按住顯示座號">🔢</button>
-    <button onclick="scrollToBottom()" title="到底部">⏬</button>
-  </div>
+ 
 
 </body>
+
 </html>
